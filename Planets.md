@@ -55,3 +55,13 @@
 - Escape Velocity : 129,924km/h
 - Equatorial Inclination : 26.7 degrees
 
+#Sun
+- Radius : 695,508km
+The orbit probably isn't necessary since all the planets move around the sun and have the same movement as the sun in the Milky Way.
+- Average Orbit Distance : ?
+- Mean Orbit Velocity :  828,000 km/h
+- Orbit Eccentricity : ?
+- Mass : 1,989,100,000,000,000,000,000,000,000,000kg
+- Escape Velocity : 2,223,720km/h
+- Equatorial Inclination : 7.25
+
