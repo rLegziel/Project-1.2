@@ -1,194 +1,311 @@
+import java.io.*;
+import java.util.*;
+import java.lang.Object;
+import java.math.*;
 
-public class Body {
+public class Body{
 
-    // mass, radius, positions, velocity vectors from:
-    // https://ssd.jpl.nasa.gov/horizons.cgi
-
-    enum CelestialBody {
-
-        //Name                  Mass            Radius         X                        Y                        Z                       VX                       VY                      VZ
-        SUN("Sun",              1.98855E+30,    695700000.0,   0,                       0,                       0,                      0,                       0,                      0),
-
-        MERCURY("Mercury", 0.33011E+24, 2439.7E+3, -2.914712614752511E+07, -6.199930532058012E+07, -2.431019447296567E+06, 3.424177060854215E+01, -1.840752506021413E+01, -4.646878989229692E+00),
-
-        VENUS("Venus", 4.8675e24, 6051.8E+3, -4.540221440982638E+07, -9.761702225397852E+07, 1.275022972156055E+06, 3.149189089973654E+01, -1.494411854718451E+01, -2.022651128423027E+00),
-
-        EARTH("Earth", 5.9723E+24, 6371.008E+3, -1.123742743143437E+08, -9.929473113856807E+07, -1.719909168424457E+04, 1.927910017573211E+01, -2.238794104605604E+01, 7.654215803398756E-05),
-
-        MARS("Mars", 0.64171E+24, 3389.5E+3, 2.769489375730218E+07, 2.314083002586504E+08, 4.143650166228279E+06, -2.315120132716055E+01, 4.913658465424496E+00, 6.708963405868693E-01),
-
-        JUPITER("Jupiter", 1898.19E+24, 69911E+3, -7.670423564156541E+08, -2.760915741715643E+08, 1.830090612901382E+07, 4.273937961349422E+00, -1.167254830604601E+01, -4.700656450718288E-02),
-
-        SATURN("Saturn", 568.34E+24, 58232E+3, -1.847985294188508E+08, -1.491810077910302E+09, 3.329327731071341E+07, 9.057064141245075E+00, -1.217469136865241E+00, -3.397713403584295E-01),
-
-        NEPTUNE("Neptune", 102.413E+24, 24622E+3, 4.257186540489833E+09, -1.395306114349077E+09, -6.937752828586924E+07, 1.655967756688154E+00, 5.197288115337841E+00, -1.446099865733843E-01),
-
-        URANUS("Uranus", 86.813e24, 25362E+3, 2.714797267277413E+09, 1.233207333719350E+09, -3.059052863518852E+07, -2.866519506810219E+00, 5.882836573485944E+00, 5.882566688337931E-02),
-
-        PLUTO("Pluto", 0.01303E+24, 1187E+3, 1.501099735943540E+09, -4.752004467812544E+09, 7.428723010835433E+07, 5.302832537658332E+00, 4.978205559367923E-01, -1.608658326954050E+00),
-
-        TITAN("Titan", 0.3452E+23, 2575.73, -1.857968240129294E+08, -1.491099031663066E+09, 3.302585356476218E+07, 5.761606665660599E+00, -4.906852920324597E+00, 1.888834075303969E+00),
-
-        PROBE("Probe", 5E+3, 1E+1, 6371.008E+3, 0, 0, -3.217469136865241E+00, 3.057064141245075E+00, 1.888834075303969E+00);
+    // starting date 05.06.2020
+    /*
+    /Saturn Perihelion Date: 28.11.2032  || Saturn Year is 10,759.22 days long || 4559 days after start date
+     Jupiter Perihelion Date: January 20, 2023 || Jupiter year is  4,332.59 days long || 959 days after start date
+     Mars Perihelion Date: September 16, 2018 || Mars year is 686.98 days long || 628 before starting date
+     Earth Perihelion Date: 2020 Jan 05 || Earth year is 365.25 days long || 152 days before start date
 
 
-        public final String name;
-        public final double mass;   // kg
-        public final double radius; // meters
-        public Vector3D location; // meters
-        public Vector3D velocity; // m/s
+      distances are in km, years are in days.
+     */
+    public double PDistance;
+    public double ADistance;
+    public double year;
+    public double degreesFromSun;
+    public double difference;
+    public double distancePerDay;
+    public double xLocation;
+    public double yLocation;
+    public boolean increasing;
 
+    public Body(double vPDistance,double vADistance,double vYear,double degreesFromSun){
+        PDistance = vPDistance;
+        ADistance = vADistance;
+        year = vYear;
+        difference = differenceBetweenDistances(ADistance,PDistance);
+        distancePerDay = distancePerDay(difference,year);
+        degreesFromSun = 0;
+        xLocation = vADistance;
+        yLocation =0;
+    }
 
-        /**
-         * @param name   (String)
-         * @param mass   kg
-         * @param radius m
-         * @param x      m
-         * @param y      m
-         * @param z      m
-         * @param x_vel  km/s
-         * @param y_vel  km/s
-         * @param z_vel  km/s
-         */
-        CelestialBody(String name, double mass, double radius, double x, double y, double z, double x_vel, double y_vel, double z_vel) {
-            this.name = name;
-            this.mass = mass;
-            this.radius = radius;
-            this.location = new Vector3D(x * 1000, y * 1000, z * 1000);
-            this.velocity = new Vector3D(x_vel * 1000, y_vel * 1000, z_vel * 1000);
+    public Body(){
+
+    }
+
+    public static double differenceBetweenDistances(double aDistance,double pDistance){ // calculates the difference between perihelion to aphelion
+        return aDistance-pDistance;
+    }
+
+    public static double degreesChange(double year){ // calculates how many degrees per day
+        return 180/(year/2);
+    }
+
+    public static double distancePerDay(double difference,double year){ // calculates the how the distance of the body changes per day in relation to the sun
+        return difference/(year/2);
+    }
+
+    public static double movementPerDegree(double difference){ // calculates how much the star moves in relation to the sun per degree
+        return difference/180;
+    }
+    public static double degreestoStartDate(double toStart,double year){
+        double degrees =  (toStart/year) * 360;
+        if(degrees>0){
+            return degrees;
         }
-
-        public Body getAsBody() {
-            Body body = new Body(name, mass, radius, location, velocity);
-            return body;
+        else{
+            return (360+degrees)-180;
         }
+    }
+
+
+    public  void checkIncreasing(){
+        if (xLocation <=PDistance){
+            increasing =true;
+        }if(xLocation >= ADistance){
+            increasing = false;
+        }
+    }
+
+    public double getxLocation(){
+        return xLocation;
+    }
+
+    public double getyLocation(){
+        return yLocation;
+    }
+
+    public double getDegreesFromSun(){
+        return degreesFromSun;
+    }
+
+
+//    public void SaturnMovement(){
+//        checkIncreasing();
+//        if(increasing == true) {
+//            xLocation = xLocation + distancePerDay;
+//        }else{
+//            xLocation = xLocation - distancePerDay;
+//        }
+//        double firstOne = Math.pow(1.427E+09,2);
+//        double topSecond = (Math.pow(xLocation-(7.6955E+07),2) * (Math.pow(1.427E+09,2)));
+//        double bottomSecond = Math.pow((1.4293E+09),2);
+//        System.out.println(firstOne + " this is the first object");
+//        System.out.println(topSecond/bottomSecond + " is the second");
+//        double yLocationSquared = firstOne - (topSecond/bottomSecond);
+//        System.out.println(yLocationSquared +" is y squared");
+//        double margin = 3.406182845718627E7/(year/2);
+//         yLocation = Math.sqrt(0-yLocationSquared) ;
+//         degreesFromSun = degreesFromSun + degreesChange(year);
+//
+//    }
+
+    public void SaturnMovement(){
+        checkIncreasing();
+        if(increasing == true) {
+            xLocation = xLocation + distancePerDay;
+        }else{
+            xLocation = xLocation - distancePerDay;
+        }
+        System.out.println(xLocation + " is our x location");
+        double firstOne = Math.pow(1.427E+09,2);
+        double topSecond = (Math.pow(xLocation-(7.6955E+07),2) * (Math.pow(1.427E+09,2)));
+        double bottomSecond = Math.pow((1.4293E+09),2);
+        System.out.println(firstOne + " this is the first object");
+        System.out.println(topSecond/bottomSecond + " is the second");
+        double yLocationSquared = firstOne - (topSecond/bottomSecond);
+        System.out.println(yLocationSquared +" is y squared");
+        double margin = 3.406182845718627E7/(year/2);
+        yLocation = Math.sqrt(0-yLocationSquared) ;
+        degreesFromSun = degreesFromSun + degreesChange(year);
 
     }
 
-    public String name;
-    public double mass;
-    public double radius;
-    public Vector3D location;
-    public Vector3D velocity;
-    public Vector3D acceleration;
+    public void mercuryMovement(){
+        checkIncreasing();
+        if(increasing == true) {
+            xLocation = xLocation + distancePerDay;
 
-    public Body(String name, double mass, double radius, Vector3D location, Vector3D velocity) {
-        this.name = name;
-        this.mass = mass;
-        this.radius = radius;
-        this.location = location;
-        this.velocity = velocity;
-        this.acceleration = new Vector3D();
+        }else{
+            xLocation = xLocation - distancePerDay;
+
+        }
+        double yLocationSquared = Math.pow((5.67*Math.pow(10,6)),2) - Math.pow((xLocation - (1.119*Math.pow(10,6))),2) / Math.pow(5.67*Math.pow(10,6),2);
+        yLocation = Math.sqrt(yLocationSquared);
     }
 
-    /**
-     * Resets acceleration vector so that addAccelerationByGravForce() can accumulate forces during a new timeslice.
-     */
-    public void resetAcceleration() {
-        acceleration = new Vector3D();
+    public void venusMovement(){
+        checkIncreasing();
+        if(increasing == true) {
+            xLocation = xLocation + distancePerDay;
+        }else{
+            xLocation = xLocation - distancePerDay;
+        }
+        double yLocationSquared = Math.pow((1.0744*Math.pow(10,8)),2) - Math.pow((xLocation - (7.52*Math.pow(10,5))),2) / Math.pow(1.0745*Math.pow(10,8),2);
+        yLocation = Math.sqrt(yLocationSquared);
     }
 
-    /**
-     * Calculates the gravitational force between this body and another body and
-     * accumulates the force.
-     *
-     * @param other celestial body
-     */
-    public void addAccelerationByGravForce(Body other) {
-        addAccelerationByForce(calculateGravitationalForce(other));
+    public void earthMovement(){ //// fix equations
+        checkIncreasing();
+        if(increasing == true) {
+            xLocation = xLocation + distancePerDay;
+        }else{
+            xLocation = xLocation - distancePerDay;
+        }
+        double yLocationSquared = Math.pow((1.4954*Math.pow(10,8)),2) - Math.pow((xLocation - (2.54*Math.pow(10,6))),2) / Math.pow(1.4956*Math.pow(10,8),2);
+        yLocation = Math.sqrt(yLocationSquared);
+        degreesFromSun = degreesFromSun + degreesChange(year);
     }
 
-    /**
-     * Calculates the gravitational force between this body and another body.
-     *
-     * Newton's law of universal gravitation: F = G * (m1 * m2)/r²
-     *  - F = force between bodies in newtons. The force is a vector pointing towards the current body (attracting)
-     *  - m1 = mass of body1 in kilograms
-     *  - m2 = mass of body2 in kilograms
-     *  - G = gravitaional constant (6.674×10−11 N · (m/kg)² )
-     *  - r = distance between the centers of the masses in meters
-     *
-     *
-     * @param other
-     */
-    protected Vector3D calculateGravitationalForce(Body other) {
-        // get direction vector
-        Vector3D directionVect = new Vector3D(this.location);
-        directionVect.sub(other.location).normalize().mul(-1);
-
-        // distance between bodies
-        double r = this.location.distance(other.location);
-
-        // calculate force
-        Vector3D grativationalForce = new Vector3D(directionVect);
-        grativationalForce.mul(BodySystem.G).mul(this.mass).mul(other.mass).mul(r).div(Math.pow(Math.abs(r), 3));
-
-        return grativationalForce;
+    public void marsMovement(){
+        checkIncreasing();
+        if(increasing == true) {
+            xLocation = xLocation + distancePerDay;
+        }else{
+            xLocation = xLocation - distancePerDay;
+        }
+        double yLocationSquared = Math.pow((2.27*Math.pow(10,8)),2) - Math.pow((xLocation - (2.14*Math.pow(10,7))),2) / Math.pow(2.28*Math.pow(10,8),2);
+        yLocation = Math.sqrt(yLocationSquared);
     }
 
-    /**
-     * Adds a force vector to the body wich implies a change in acceleration depending on mass.
-     *
-     *  Newton's second law: F = m * a, a = F/m
-     *
-     *  - F = force acting on the body in newtons
-     *  - m = mass of body in kilograms
-     *  - a = acceleration in m/s²
-     *
-     * @param force
-     *
-     */
-    public void addAccelerationByForce(Vector3D force) {
-        Vector3D accByForce = new Vector3D(force);
-        accByForce.div(mass);
-        acceleration.add(accByForce);
+    public void jupiterMovement(){
+        checkIncreasing();
+        if(increasing == true) {
+            xLocation = xLocation + distancePerDay;
+        }else{
+            xLocation = xLocation - distancePerDay;
+        }
+        double yLocationSquared = Math.pow((7.75*Math.pow(10,8)),2) - Math.pow((xLocation - (3.81*Math.pow(10,7))),2) / Math.pow(7.785*Math.pow(10,8),2);
+        yLocation = Math.sqrt(yLocationSquared);
     }
 
-    /**
-     * Calculates a new velocity and location for the body for current acceleration and
-     * a given timeslice.
-     *
-     * Note that the velocity calculated by applying the acceleration during the timeslice
-     * will be the final velocity. To calculate the new location we will use the average
-     * velocity instead in order to get a better approximation.
-     *
-     * The accuracy of the calculated velocity and location will be dependent on how how long
-     * the timeslice is and how constant the acceleration is during the timeslice.
-     *
-     * @param timeSlice the timeslice for which current acceleration should affect the body.
-     */
-    public void updateVelocityAndLocation(double timeSlice) {
-        // caluclate final velocity when the time slice has occurred
-        Vector3D oldVelocity = new Vector3D(this.velocity);
-        updateVelocity(timeSlice);
-
-        // updateVelocityAndLocation location using average velocity
-        Vector3D changedVelocityAverage = new Vector3D(this.velocity).sub(oldVelocity).div(2.0);
-        Vector3D averageVelocity = new Vector3D(oldVelocity).add(changedVelocityAverage);
-        updateLocation(timeSlice, averageVelocity);
+    public void uranusMovement(){ // make sure with luc
+        checkIncreasing();
+        if(increasing == true) {
+            xLocation = xLocation + distancePerDay;
+        }else{
+            xLocation = xLocation - distancePerDay;
+        }
+        double yLocationSquared = Math.pow((2.888*Math.pow(10,9)),2) - Math.pow((xLocation - (1.32*Math.pow(10,8))),2) / Math.pow(2.872*Math.pow(10,9),2);
+        yLocation = Math.sqrt(yLocationSquared);
     }
 
-    /**
-     * Calculates the final velocity when current accumulated acceleration has been applied during a timeslice.
-     *
-     * @param timeSlice
-     */
-    protected void updateVelocity(double timeSlice) {
-        Vector3D velocityByAcc = new Vector3D(acceleration).mul(timeSlice);
-        velocity.add(velocityByAcc);
+    public void neptuneMovement(){
+        checkIncreasing();
+        if(increasing == true) {
+            xLocation = xLocation + distancePerDay;
+        }else{
+            xLocation = xLocation - distancePerDay;
+        }
+        double yLocationSquared = Math.pow((4.960*Math.pow(10,9)),2) - Math.pow((xLocation - (4.946*Math.pow(10,7))),2) / Math.pow(4.4962*Math.pow(10,9),2);
+        yLocation = Math.sqrt(yLocationSquared);
     }
 
-    /**
-     * Calulates a new location given that an velocity has been applied a given timeslice.
-     *
-     * @param timeSlice the timeslice for which given average velocity should affect the body.
-     * @param averageVelocity the average velocity during the timeslice
-     */
-    protected void updateLocation(double timeSlice, Vector3D averageVelocity) {
-        //orbit.add(location);
-        Vector3D locationByVelocity = new Vector3D(averageVelocity).mul(timeSlice);
-        location.add(locationByVelocity);
+    public void plutoMovement(){
+        checkIncreasing();
+        if(increasing == true) {
+            xLocation = xLocation + distancePerDay;
+        }else{
+            xLocation = xLocation - distancePerDay;
+        }
+        double yLocationSquared = Math.pow((5.570*Math.pow(10,9)),2) - Math.pow((xLocation - (1.447*Math.pow(10,9))),2) / Math.pow(5.929*Math.pow(10,9),2);
+        yLocation = Math.sqrt(yLocationSquared);
     }
+
+//
+//
+//
+//
+//
+//    public double saturnPDistance = 1352544268.211;
+//    public double saturnADistance = 1514498922.988;
+//    public double saturnYear = 10759.22;
+//    public double saturnDifference = saturnADistance-saturnPDistance;
+//    public double saturnDegreesChange = 180/(saturnYear/2);
+//    public double saturnDistancePerDay = saturnDifference/(saturnYear/2);
+//    public double saturnKMDifference = saturnDifference/180; // movement per degree
+//    public double saturnAmountOfDegreestoStartDate = 4559*saturnDegreesChange;
+//
+//    public double jupiterPDistance = 816624856.3588;
+//    public double jupiterADistance = 740524419.5541;
+//    public double jupiterYear = 4332.59;
+//    public double jupiterDifference = jupiterADistance-jupiterPDistance;
+//    public double jupiterDegreesChange = 180/(jupiterYear/2);
+//    public double jupiterDistancePerDay = jupiterDifference/(jupiterYear/2);
+//    public double jupiterKMDifference = jupiterDifference/180; // movement per degree
+//    public double jupiterAmountOfDegreestoStartDate = 4559*jupiterDegreesChange;
+//
+//
+//
+//    public double marsPDistance = 206654498.5297;
+//    public double marsADistance = 248332465.2956;
+//    public double marsYear = 686.98;
+//    public double marsDifference = marsADistance-marsPDistance;
+//    public double marsDegreesChange = 180/(marsYear/2);
+//    public double marsDistancePerDay = marsDifference/(marsYear/2);
+//    public double marsKMDifference = marsDifference/180; // movement per degree
+//    public double marsAmountOfDegreestoStartDate = 4559*marsDegreesChange;
+//
+//
+//    public double earthPDistance = 152141034.4612;
+//    public double earthADistance = 147095098.2839;
+//    public double earthYear = 365.25;
+//    public double earthDifference = earthADistance-earthPDistance;
+//    public double earthDegreeChange = 180/(earthYear/2);
+//    public double earthDistancePerDay = earthDifference/(earthYear/2);
+//    public double earthKMDifference = earthDifference/180; // movement per degree
+//    public double earthAmountOfDegreestoStartDate = 4559*earthDegreeChange;
+
+
+public static void main(String[] args){
+
+    Body Saturn = new Body(1352544268.211,1514498922.988,10759.22,0);
+    Body Saturn2 = new Body(1352544268.211,1514498922.988,10759.22,0);
+    Body earth = new Body(147095098.2839,152141034.4612,365.25,0);
+    Body body = new Body();
+    body.run();
+
+
+
+    Body Jupiter = new Body(816624856.3588,740524419.5541,4332.59,959);
+    Body Mars = new Body(206654498.5297,248332465.2956,686.98,-628);
+    Body Earth = new Body(152141034.4612,147095098.2839,365.25,-152);
 
 
 }
+
+    public void run() {
+        Body Saturn = new Body(-1352544268.211, 1514498922.988, 10759.22, 0);
+        Body Saturn2 = new Body(1352544268.211, 1514498922.988, 10759.22, 0);
+        Body earth = new Body(147095098.2839, 152141034.4612, 365.25, 0);
+        for (int i = 0; i < 470; i++) {
+            Saturn.SaturnMovement();
+        }
+        double currentLocationX = Saturn.getxLocation();
+        double currentLocationY = Saturn.getyLocation();
+        double degreesFromSun = Saturn.getDegreesFromSun();
+        System.out.println(currentLocationX + " is the x[saturn] location " + degreesFromSun + " is the degrees from the sun");
+
+        for (int j = 0; j < 15; j++) {
+            earth.earthMovement();
+        }
+        System.out.println(earth.getxLocation() + " is the x[earth] location " + earth.getDegreesFromSun() + " is the degrees from the sun");
+    }
+
+
+    }
+
+
+
+
+
+
+
+
