@@ -3,6 +3,7 @@ package nbody.model;
 
 import javafx.animation.Timeline;
 
+import java.sql.SQLOutput;
 import java.sql.Time;
 import java.util.*;
 
@@ -15,8 +16,20 @@ public class BodySystem {
     private static final int SEC_IN_DAY = SEC_IN_HOUR * 24;
     private static final int SEC_IN_YEAR = 31556926;
     private long elapsedSeconds = 0;
+
     //the time when I start to adjust the trajectory with the engines
-    private long timeWhenClosest = 239007600;
+    private long saturnTime = 238608000;
+    private long closestToSaturn = 238996800;
+    private long stayInOrbitSaturn = 238999200;
+    private double xSaturn =1407803030373.561800;
+    private double ySaturn = -290357895704.930240;
+    private double zSaturn = -51070777398.352970;
+
+    private long timeClosestToTitan = 239000400;
+    private double xTitan = 1409198048006.711000;
+    private double yTitan = -287772211103.425350;
+    private double zTitan = -52532091692.418510;
+
     public double startingDistance = 1.4E+10;
     public Body chosenOne;
     public String currentTime;
@@ -28,7 +41,7 @@ public class BodySystem {
     // 6.874331296673225E8
     //4.822473458108047E7
 
-    private long firstLaunch =185238000  ; ;
+    private long firstLaunch =185238000  ;
     private long intervalTime = (long) SEC_IN_DAY/8;  //how long between launches
     private long interval = firstLaunch;
 
@@ -45,7 +58,6 @@ public class BodySystem {
 
     private int probesNum = 1; //number of probes we send at a time
     private int probesLimit =1 ; //limit the number of probes we send
-    private ArrayList<Body> probesList = new ArrayList<>();//stores all the probes we launch
     private ArrayList<Probe> realProbesList = new ArrayList<>();
     private ArrayList<Double> minDistancesList = new ArrayList<>();
     ArrayList<Long> launchTimesList = new ArrayList<>();//stores the times in which we launch the probes, we should change this to a date in the future
@@ -81,19 +93,45 @@ public class BodySystem {
 
         elapsedSeconds += timeSlice;
 
-        //adjust the trajectory of the probe on a certain time
-        if(elapsedSeconds == timeWhenClosest + timeSlice) {
 
-            useEngine(1409184533433.560300,-287679584902.776550,-52538213947.785090,timeSlice);
-        }
-        //again
-        if(elapsedSeconds == timeWhenClosest+ timeSlice*2) {
-            useEngine(1409182593700.753400,-287666368759.431200,9257.660980,timeSlice);
+
+        if(elapsedSeconds > firstLaunch+intervalTime && elapsedSeconds<timeClosestToTitan) {
+
+            double differenceInTime = timeClosestToTitan - elapsedSeconds;
+            double timeToGetThere = differenceInTime;
+            useEngine(xTitan,yTitan,zTitan,timeToGetThere,timeSlice);
         }
 
-        if(elapsedSeconds == timeWhenClosest+ timeSlice*3) {
-            useEngine(1409180651716.603000,-287653156665.123200,-52539942241.660210,timeSlice);
+
+
+        /*
+        if (elapsedSeconds>=stayInOrbitSaturn){
+            //System.out.println("VELOCITY NEEDED FOR PROBE TO STAY IN ORBIT SATURN: ");
+            double distanceSaturnProbe = realProbesList.get(1).location.probeDistance(bodies.get(6).location);
+            double velocitySquared = (Physics.G*bodies.get(6).mass)/distanceSaturnProbe;
+            double velocity = Math.sqrt(velocitySquared);
+            //System.out.println(velocity);
+            //System.out.println("THE ANGLE OF THE PROBE: ");
+            double angle = Math.tan(realProbesList.get(1).location.y/realProbesList.get(1).location.x);
+            //System.out.println(angle);
+            double neededVelocityX = velocity*(Math.cos(angle));
+            double neededVelocityY = velocity*(Math.sin(angle));
+            //System.out.println("Needed velocity x and y: ");
+            //System.out.println("X: " + neededVelocityX);
+            //System.out.println("Y: " + neededVelocityY);
+            realProbesList.get(1).acceleration.x = 0;
+            realProbesList.get(1).acceleration.y = 0;
+            realProbesList.get(1).acceleration.z = 0;
+            realProbesList.get(1).velocity.x = neededVelocityX;
+            realProbesList.get(1).velocity.y = neededVelocityY;
+            realProbesList.get(1).velocity.z = 0;
+            realProbesList.get(1).location.z = 0;
+            bodies.get(6).velocity.z = 0;
+            bodies.get(6).location.z = 0;
         }
+
+         */
+
 
 
 
@@ -102,16 +140,15 @@ public class BodySystem {
         bodies.stream().forEach(i -> i.updateVelocityAndLocation(timeSlice));
         //157786200
 
-        if(elapsedSeconds == interval &&  probesList.size() <=probesLimit){
+        if(elapsedSeconds == interval &&  realProbesList.size() <=probesLimit){
 //        if(elapsedSeconds == interval && probesList.size() <= probesLimit) {
             launchNewProbe();
-
-
         }
 
+
         //time to start checking the distance between the probe and titan
-        if(elapsedSeconds >= timeWhenClosest-timeSlice*2 && elapsedSeconds <= timeWhenClosest + timeSlice*4){
-            check1();
+        if(elapsedSeconds >= saturnTime-2*timeSlice && elapsedSeconds <= closestToSaturn + timeSlice*3){
+            check1(bodies.get(10));
         }
 
         return timeSlice;
@@ -155,22 +192,16 @@ public class BodySystem {
 
 
 
-        Body probe = new Body(location,velocity,radius,mass);
-
-        Probe rProbe = new Probe(location,velocity,radius,mass,"prob" + probesList.size(),elapsedSeconds,
+        Probe rProbe = new Probe(location,velocity,radius,mass,"prob" + realProbesList.size(),elapsedSeconds,
                 velocity.x,velocity.y);
 
         realProbesList.add(rProbe);
-        probesList.add(probe);
         minDistancesList.add(Double.MAX_VALUE);
-        probe.name = "probe" + probesList.indexOf(probe);
-        System.out.println(probe.name + " launched on " + getElapsedTimeAsString());
+        rProbe.name = "probe" + realProbesList.indexOf(rProbe);
+        System.out.println(rProbe.name + " launched on " + getElapsedTimeAsString());
         launchTimesList.add(elapsedSeconds);
 
-        addBody(probe);
-//        System.out.println("probe " + probesList.indexOf(probe) + " launched at " + elapsedSeconds +
-//                " scalarX: " + scalarX + " scalarY: " + scalarY) ;
-
+        addBody(rProbe);
         //change this so it doesn't send multiple probes at one time
         interval+=intervalTime;
     }
@@ -179,27 +210,26 @@ public class BodySystem {
     /**
      * checks the distance between each probe and titan, will print the probe that gets closest to titan.
      */
-    public void check1(){
+    public void check1(Body other){
         startingDistance = 5E15;
-            double distance = probesList.get(1).location.probeDistance(bodies.get(10).location); // location of the probe, distance to Titan
+            double distance = realProbesList.get(1).location.probeDistance(other.location); // location of the probe, distance to Titan
             //System.out.println(distance);
             if (distance<startingDistance){
-                chosenOne = probesList.get(1);
-                System.out.println(probesList.get(1));
-                System.out.println(bodies.get(10));
+                chosenOne = realProbesList.get(1);
+                System.out.println(realProbesList.get(1));
+                System.out.println(other);
                 startingDistance = distance;
                 System.out.println(" The minimum distance is(in meters) : " + startingDistance);
                 currentTime = getElapsedTimeAsString();
-                System.out.println(currentTime);
+                //System.out.println(currentTime);
                 System.out.println(elapsedSeconds);
-                System.out.println(launchTimesList);
-
             }
 
 
 
 
     }
+
 
 
     public Optional<Body> getBody(String name) {
@@ -228,27 +258,27 @@ public class BodySystem {
      * @param zTitan
      * @param timeSlice
      */
-    public void useEngine(double xTitan, double yTitan, double zTitan, double timeSlice){
+    public void useEngine(double xTitan, double yTitan, double zTitan, double timeNeeded,double timeSlice){
 
         //difference in distance
-        double xdif = xTitan - probesList.get(1).location.x;
-        double ydif = yTitan - probesList.get(1).location.y;
-        double zdif = zTitan - probesList.get(1).location.z;
+        double xdif = xTitan - realProbesList.get(1).location.x;
+        double ydif = yTitan - realProbesList.get(1).location.y;
+        double zdif = zTitan - realProbesList.get(1).location.z;
 
         //speed necessary to get to that position of titan
-        double xvel = xdif/(timeSlice);
-        double yvel = ydif/(timeSlice);
-        double zvel = zdif/(timeSlice);
+        double xvel = xdif/(timeNeeded);
+        double yvel = ydif/(timeNeeded);
+        double zvel = zdif/(timeNeeded);
 
         //the amount of acceleration needed to get that velocity
-        double xacc = xvel - probesList.get(1).velocity.x;
-        double yacc = yvel - probesList.get(1).velocity.y;
-        double zacc = zvel - probesList.get(1).velocity.z;
+        double xacc = xvel - realProbesList.get(1).velocity.x;
+        double yacc = yvel - realProbesList.get(1).velocity.y;
+        double zacc = zvel - realProbesList.get(1).velocity.z;
 
 
         //give the probe the right acceleration
-        for (int i = 0; i < probesList.size(); i++) {
-            probesList.get(i).acceleration = new Vector3D(xacc/timeSlice, yacc/timeSlice, zacc/timeSlice);
+        for (int i = 0; i < realProbesList.size(); i++) {
+            realProbesList.get(i).acceleration = new Vector3D(xacc/timeSlice, yacc/timeSlice, zacc/timeSlice);
         }
     }
 

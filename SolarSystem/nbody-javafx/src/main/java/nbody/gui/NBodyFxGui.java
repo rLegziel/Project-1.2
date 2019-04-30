@@ -95,20 +95,22 @@ public class NBodyFxGui extends Application {
         this.canvasHeight = gc.getCanvas().getHeight();
         gc.clearRect(0, 0, canvasWidth, canvasHeight);
 
-        for (Body body : bodySystem.getBodies()) {
+        for (int i = 0; i<bodySystem.getBodies().size();i++) {
 
 
-            double otherX = transformer.modelToOtherX(body.location.x);
-            double otherY = transformer.modelToOtherY(body.location.y);
+            double otherX = transformer.modelToOtherX(bodySystem.getBodies().get(i).location.x);
+            double otherY = transformer.modelToOtherY(bodySystem.getBodies().get(i).location.y);
 
             // draw circle
             gc.setFill(Color.BLACK);
             gc.fillOval(otherX - BODY_RADIUS_GUI, otherY - BODY_RADIUS_GUI, BODY_RADIUS_GUI * 2, BODY_RADIUS_GUI * 2);
 
             //  label
-            Text text = new Text(body.name);
-            gc.fillText(body.name, otherX - (text.getLayoutBounds().getWidth() / 2), otherY - BODY_RADIUS_GUI - (text.getLayoutBounds().getHeight() / 2));
+            Text text = new Text(bodySystem.getBodies().get(i).name);
+            gc.fillText(bodySystem.getBodies().get(i).name, otherX - (text.getLayoutBounds().getWidth() / 2), otherY - BODY_RADIUS_GUI - (text.getLayoutBounds().getHeight() / 2));
         }
+
+
 
         bodySystem.update(TIME_SLICE, timeline);
         //timeLabel.setText(bodySystem.getElapsedTimeAsString() + " Distance " + bodySystem.currentDistance);

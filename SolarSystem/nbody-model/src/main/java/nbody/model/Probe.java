@@ -1,17 +1,8 @@
 package nbody.model;
 
 public class Probe extends Body {
-    public Vector3D location;
-    public Vector3D velocity;
-    public Vector3D acceleration;
 
-    /** mass in kilograms */
-    public double mass;
 
-    /** radius in meters */
-    public double radius;
-
-    public String name;
     public long launchDate;
     public double startVX;
     public double startVY;
@@ -70,6 +61,7 @@ public class Probe extends Body {
 
 
     public Probe() {
+        super();
         if (acceleration == null) {
             acceleration = new Vector3D();
         }
@@ -83,11 +75,8 @@ public class Probe extends Body {
 
     public Probe(Vector3D location, Vector3D velocity, double radius, double mass, String name, long launchDate,
                  double startVX, double startVY) {
-        this();
-        this.location = location;
-        this.velocity = velocity;
-        this.radius = radius;
-        this.mass = mass;
+        super(location,velocity,radius,mass);
+        this.launchDate = launchDate;
         this.name = name;
         this.startVX = startVX;
         this.startVY = startVY;
