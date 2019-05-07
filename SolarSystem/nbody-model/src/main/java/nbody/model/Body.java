@@ -164,7 +164,6 @@ public class Body {
         Vector3D locationByVelocity = new Vector3D(averageVelocity).mul(timeSlice);
         location.add(locationByVelocity);
     }
-
     @Override
     public String toString() {
         StringBuffer buf = new StringBuffer();

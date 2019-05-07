@@ -7,6 +7,7 @@ public class Probe extends Body {
     public double startVX;
     public double startVY;
 
+
     public long getLaunchDate() {
         return launchDate;
     }
@@ -71,6 +72,7 @@ public class Probe extends Body {
         if (location == null) {
             location = new Vector3D();
         }
+
     }
 
     public Probe(Vector3D location, Vector3D velocity, double radius, double mass, String name, long launchDate,
@@ -82,5 +84,14 @@ public class Probe extends Body {
         this.startVY = startVY;
     }
 
+/*
+    public Vector3D calculateAccelerationLanding(Body titan){
+        double angle = Math.atan(location.y/location.x);
+        double height = location.y - titan.location.y;
+
+
+
+    }
+*/
 
 }

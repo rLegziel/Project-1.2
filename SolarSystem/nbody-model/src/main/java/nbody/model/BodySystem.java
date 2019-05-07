@@ -29,6 +29,7 @@ public class BodySystem {
     private double xTitan = 1409198048006.711000;
     private double yTitan = -287772211103.425350;
     private double zTitan = -52532091692.418510;
+    private PIDController controller = new PIDController(1200,xTitan,yTitan);
 
     public double startingDistance = 1.4E+10;
     public Body chosenOne;
@@ -94,43 +95,36 @@ public class BodySystem {
         elapsedSeconds += timeSlice;
 
 
+        if(elapsedSeconds > firstLaunch+intervalTime + timeSlice && elapsedSeconds<timeClosestToTitan) {
 
-        if(elapsedSeconds > firstLaunch+intervalTime && elapsedSeconds<timeClosestToTitan) {
-
-            double differenceInTime = timeClosestToTitan - elapsedSeconds;
-            double timeToGetThere = differenceInTime;
-            useEngine(xTitan,yTitan,zTitan,timeToGetThere,timeSlice);
+            if (realProbesList.size()>=2) {
+                double differenceInTime = timeClosestToTitan - elapsedSeconds;
+                double timeToGetThere = differenceInTime;
+                useEngine(xTitan, yTitan, zTitan, timeToGetThere, timeSlice);
+            }
         }
 
+        if (elapsedSeconds> firstLaunch + timeSlice && elapsedSeconds<timeClosestToTitan){
 
+            if (realProbesList.size()>=2){
+                double xAcc = controller.computeNewX(realProbesList.get(1).location.x,bodies.get(10).location.x);
+                double yAcc = controller.computeNewY(realProbesList.get(1).location.y,bodies.get(10).location.y);
+                Vector3D accelerationVector = new Vector3D(xAcc,yAcc,0);
+                accelerationVector = accelerationVector.normalize();
+                //System.out.println(accelerationVector.x);
+                realProbesList.get(1).addAccelerationByForce(accelerationVector);
+            }
+            if (realProbesList.size()>=2){
+                double xAcc = controller.computeNewX(realProbesList.get(0).location.x,bodies.get(10).location.x);
+                double yAcc = controller.computeNewY(realProbesList.get(0).location.y,bodies.get(10).location.y);
+                Vector3D accelerationVector = new Vector3D(xAcc,yAcc,0);
+                accelerationVector = accelerationVector.normalize();
+                //System.out.println(accelerationVector.x);
+                realProbesList.get(0).addAccelerationByForce(accelerationVector);
+            }
 
-        /*
-        if (elapsedSeconds>=stayInOrbitSaturn){
-            //System.out.println("VELOCITY NEEDED FOR PROBE TO STAY IN ORBIT SATURN: ");
-            double distanceSaturnProbe = realProbesList.get(1).location.probeDistance(bodies.get(6).location);
-            double velocitySquared = (Physics.G*bodies.get(6).mass)/distanceSaturnProbe;
-            double velocity = Math.sqrt(velocitySquared);
-            //System.out.println(velocity);
-            //System.out.println("THE ANGLE OF THE PROBE: ");
-            double angle = Math.tan(realProbesList.get(1).location.y/realProbesList.get(1).location.x);
-            //System.out.println(angle);
-            double neededVelocityX = velocity*(Math.cos(angle));
-            double neededVelocityY = velocity*(Math.sin(angle));
-            //System.out.println("Needed velocity x and y: ");
-            //System.out.println("X: " + neededVelocityX);
-            //System.out.println("Y: " + neededVelocityY);
-            realProbesList.get(1).acceleration.x = 0;
-            realProbesList.get(1).acceleration.y = 0;
-            realProbesList.get(1).acceleration.z = 0;
-            realProbesList.get(1).velocity.x = neededVelocityX;
-            realProbesList.get(1).velocity.y = neededVelocityY;
-            realProbesList.get(1).velocity.z = 0;
-            realProbesList.get(1).location.z = 0;
-            bodies.get(6).velocity.z = 0;
-            bodies.get(6).location.z = 0;
         }
 
-         */
 
 
 
@@ -140,15 +134,14 @@ public class BodySystem {
         bodies.stream().forEach(i -> i.updateVelocityAndLocation(timeSlice));
         //157786200
 
-        if(elapsedSeconds == interval &&  realProbesList.size() <=probesLimit){
-//        if(elapsedSeconds == interval && probesList.size() <= probesLimit) {
+        if(elapsedSeconds == interval + timeSlice*3*24*7 &&  realProbesList.size() <=probesLimit){
             launchNewProbe();
         }
 
 
         //time to start checking the distance between the probe and titan
         if(elapsedSeconds >= saturnTime-2*timeSlice && elapsedSeconds <= closestToSaturn + timeSlice*3){
-            check1(bodies.get(10));
+            checkLocationtoTitan(bodies.get(10));
         }
 
         return timeSlice;
@@ -210,7 +203,7 @@ public class BodySystem {
     /**
      * checks the distance between each probe and titan, will print the probe that gets closest to titan.
      */
-    public void check1(Body other){
+    public void checkLocationtoTitan(Body other){
         startingDistance = 5E15;
             double distance = realProbesList.get(1).location.probeDistance(other.location); // location of the probe, distance to Titan
             //System.out.println(distance);
@@ -280,6 +273,10 @@ public class BodySystem {
         for (int i = 0; i < realProbesList.size(); i++) {
             realProbesList.get(i).acceleration = new Vector3D(xacc/timeSlice, yacc/timeSlice, zacc/timeSlice);
         }
+    }
+
+    public List getBodieslist(){
+        return bodies;
     }
 
 }
