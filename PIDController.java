@@ -15,7 +15,8 @@ public class PIDController {
     private double previousError;
     private double integral;
     private double error;
-    private double setpoint;  // desired location ?
+    private double setpointX;  // desired location x
+    private double setpointY;  // desired location y
     private double measuredValue;  // actual location ?
     private double time;  // starting time
     private double dt;  // timestep ?
@@ -25,28 +26,35 @@ public class PIDController {
     private double ki;
     private double kd;
 
-    public PIDController(double time, double dt) {
+    public PIDController(double dt, double setpointX, double setpointY) {
+        this.setpointX = setpointX;
+        this.setpointY = setpointY;
+        this.dt = dt;
         previousError = 0;
         integral = 0;
-        this.time = time;
-        this.dt = dt;
+        kp = 1;
+        ki = 0;
+        kd = 0;
+        //this.time = time;
     }
 
-    public double computeControllerOutput(double endLocation) {
-        // endLocation is the desired ending location so Titan's orbit ?
+    public double computeNewX(double currentX) {
+        error = setpointX - currentX;
+        return computeControllerOutput(error);
+    }
 
-        // todo : getSetpoint(time)
-        // todo : getMeasuredValue(time)
+    public double computeNewY(double currentY) {
+        error = setpointY - currentY;
+        return computeControllerOutput(error);
+    }
 
-        // not sure if this is the correct stopping condition
-        while (measuredValue < endLocation + 1000) {
-            error = setpoint - measuredValue;
-            integral = integral + error * dt;
-            derivative = (error - previousError) / dt;
-            output = kp * error + ki * integral + kd * derivative;
-            previousError = error;
-            time = time + dt;
-        }
+    public double computeControllerOutput(double error) {
+        //error = setpoint - measuredValue;
+        integral = integral + error * dt;
+        derivative = (error - previousError) / dt;
+        output = kp * error + ki * integral + kd * derivative;
+        previousError = error;
+        //time = time + dt;
         return output;
     }
 
