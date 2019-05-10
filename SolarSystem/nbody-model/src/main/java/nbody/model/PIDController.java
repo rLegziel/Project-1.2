@@ -37,8 +37,8 @@ public class PIDController {
         previousErrorY = 0;
         integralX = 0;
         integralY = 0;
-        kp = 2;
-        ki = 0.5;
+        kp = 0.1;
+        ki = 0;
         kd = 0;
         //this.time = time;
     }

@@ -42,7 +42,7 @@ public class BodySystem {
     // 6.874331296673225E8
     //4.822473458108047E7
 
-    private long firstLaunch =185238000  ;
+    private long firstLaunch =185238000;
     private long intervalTime = (long) SEC_IN_DAY/8;  //how long between launches
     private long interval = firstLaunch;
 
@@ -51,7 +51,6 @@ public class BodySystem {
     private long minDistance = Long.MAX_VALUE;
     private int minDistanceProbe = -1;
 
-    private boolean print = true;
 
     Timeline timeline;
 
@@ -100,16 +99,21 @@ public class BodySystem {
             if (realProbesList.size()>=2) {
                 double differenceInTime = timeClosestToTitan - elapsedSeconds;
                 double timeToGetThere = differenceInTime;
-                useEngine(xTitan, yTitan, zTitan, timeToGetThere, timeSlice);
+                //useEngine(xTitan, yTitan, zTitan, timeToGetThere, timeSlice);
             }
         }
 
-        if (elapsedSeconds> firstLaunch + timeSlice && elapsedSeconds<timeClosestToTitan){
+        /**
+         * this is where the PIDController is used, you can change the interval
+         * probe 1 is the one that is controlled by the PID and probe 0 is commented
+         * I did this so you can clearly see the difference with and without PID
+         */
+        if (elapsedSeconds> firstLaunch + timeSlice && elapsedSeconds<timeClosestToTitan+timeSlice){
 
             if (realProbesList.size()>=2){
                 double xAcc = controller.computeNewX(realProbesList.get(1).location.x,bodies.get(10).location.x);
                 double yAcc = controller.computeNewY(realProbesList.get(1).location.y,bodies.get(10).location.y);
-                Vector3D accelerationVector = new Vector3D(xAcc,yAcc,0);
+                Vector3D accelerationVector = new Vector3D(xAcc,yAcc,10);
                 accelerationVector = accelerationVector.normalize();
                 //System.out.println(accelerationVector.x);
                 realProbesList.get(1).addAccelerationByForce(accelerationVector);
@@ -120,13 +124,20 @@ public class BodySystem {
                 Vector3D accelerationVector = new Vector3D(xAcc,yAcc,0);
                 accelerationVector = accelerationVector.normalize();
                 //System.out.println(accelerationVector.x);
-                realProbesList.get(0).addAccelerationByForce(accelerationVector);
+                //realProbesList.get(0).addAccelerationByForce(accelerationVector);
             }
 
         }
 
-
-
+        if (realProbesList.size()>=2) {
+            //distance to start checking how close the probe is to titan
+            //if there is no output increase the distance when to check
+            double distance = realProbesList.get(1).location.probeDistance(bodies.get(10).location);
+            if (distance < 1000000000) {
+                checkLocationtoTitan(bodies.get(10));
+                //updateForLanding(timeSlice,timeline);
+            }
+        }
 
 
 
@@ -134,18 +145,44 @@ public class BodySystem {
         bodies.stream().forEach(i -> i.updateVelocityAndLocation(timeSlice));
         //157786200
 
-        if(elapsedSeconds == interval + timeSlice*3*24*7 &&  realProbesList.size() <=probesLimit){
+        if(elapsedSeconds == interval  &&  realProbesList.size() <=probesLimit){
             launchNewProbe();
         }
 
 
-        //time to start checking the distance between the probe and titan
-        if(elapsedSeconds >= saturnTime-2*timeSlice && elapsedSeconds <= closestToSaturn + timeSlice*3){
-            checkLocationtoTitan(bodies.get(10));
+
+        return timeSlice;
+    }
+
+    /**
+     * this will be the method to call when the landing GUI pops up
+     * it's still very basic because it's hard to program when there is no GUI to test on
+     */
+    public double updateForLanding(double timeSlice, Timeline timeline) {
+        //does the angle need to be 90 or 0?
+        //we can have an error of 0.1;
+        double angleNeeded = 0.1;
+        for (int i = 0; i<realProbesList.size();i++){
+            double angle = Math.atan(realProbesList.get(i).location.y/realProbesList.get(i).location.x);
+            double angleChange = angle-angleNeeded;
+            double xneeded = realProbesList.get(i).location.y/Math.tan(angleChange);
+            double yneeded = bodies.get(10).location.y;
+
+            double xAcc = controller.computeNewX(realProbesList.get(i).location.x,xneeded);
+            double yAcc = controller.computeNewY(realProbesList.get(i).location.y,yneeded);
+
+            Vector3D accelerationVector = new Vector3D(xAcc,yAcc,0);
+            accelerationVector = accelerationVector.normalize();
+            //System.out.println(accelerationVector.x);
+
+            Vector3D actualAcceleration = realProbesList.get(0).calculateAccelerationLanding(bodies.get(10),accelerationVector,new Vector3D());
+            realProbesList.get(i).acceleration=actualAcceleration;
+
         }
 
         return timeSlice;
     }
+
 
     /**
      * launches a new probe, with earth's location. in this method you can choose its velocity, mass etc.
@@ -253,25 +290,24 @@ public class BodySystem {
      */
     public void useEngine(double xTitan, double yTitan, double zTitan, double timeNeeded,double timeSlice){
 
-        //difference in distance
-        double xdif = xTitan - realProbesList.get(1).location.x;
-        double ydif = yTitan - realProbesList.get(1).location.y;
-        double zdif = zTitan - realProbesList.get(1).location.z;
-
-        //speed necessary to get to that position of titan
-        double xvel = xdif/(timeNeeded);
-        double yvel = ydif/(timeNeeded);
-        double zvel = zdif/(timeNeeded);
-
-        //the amount of acceleration needed to get that velocity
-        double xacc = xvel - realProbesList.get(1).velocity.x;
-        double yacc = yvel - realProbesList.get(1).velocity.y;
-        double zacc = zvel - realProbesList.get(1).velocity.z;
-
-
         //give the probe the right acceleration
         for (int i = 0; i < realProbesList.size(); i++) {
-            realProbesList.get(i).acceleration = new Vector3D(xacc/timeSlice, yacc/timeSlice, zacc/timeSlice);
+
+            //difference in distance
+            double xdif = xTitan - realProbesList.get(i).location.x;
+            double ydif = yTitan - realProbesList.get(i).location.y;
+            double zdif = zTitan - realProbesList.get(i).location.z;
+
+            //speed necessary to get to that position of titan
+            double xvel = xdif/(timeNeeded);
+            double yvel = ydif/(timeNeeded);
+            double zvel = zdif/(timeNeeded);
+            //the amount of acceleration needed to get that velocity
+            double xacc = xvel - realProbesList.get(i).velocity.x;
+            double yacc = yvel - realProbesList.get(i).velocity.y;
+            double zacc = zvel - realProbesList.get(i).velocity.z;
+            //realProbesList.get(i).acceleration = new Vector3D(xacc/timeSlice, yacc/timeSlice, zacc/timeSlice);
+            realProbesList.get(i).addAccelerationByForce(new Vector3D((xacc/timeSlice)*realProbesList.get(i).mass,(yacc/timeSlice)*realProbesList.get(i).mass,(zacc/timeSlice)*realProbesList.get(i).mass));
         }
     }
 

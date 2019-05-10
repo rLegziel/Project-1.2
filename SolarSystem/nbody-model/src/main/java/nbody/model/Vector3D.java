@@ -130,7 +130,7 @@ public class Vector3D {
     public static void main (String[] args) {
         Vector3D v = new Vector3D(3,1,2);
         v.normalize();
-        System.out.println(v.toString());
+
     }
 
 }
