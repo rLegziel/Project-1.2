@@ -9,34 +9,64 @@ public class Lander extends Body {
     private double scalingFactor;
     private double titanDistance = 250000;
 
-    private Vector3D landingLocation;
+    private double canvasHeight;
+    private double canvasWidth;
+
+    private Vector3D realLandingLocation;
+    private Vector3D scaledLandingLocation;
 
     private double windSpeed;
+    private boolean windDirection; // if true, wind direction is west(will go positive), if negative- wind direction will go east(negative x values)
 
 
+    public double dispLocX;
+    public double dispLocY;
 
-    public double dispLocY = 1;
-    public double dispLocX = 500;
+    //PID controllers to control the speed and landing speed
+    private PIDController landingPositionX;
+    private PIDController landingPositionY;
+    private PIDController decelerateX;
+    private PIDController decelerateY;
+
+
 
 
     //not sure if this correct
     private double timeSlice = 0.5;
 
-    private PIDController controller = new PIDController(timeSlice);
 
 
     private double terminalVelocity = 6.5;
 
-    public Lander(String name, double mass, double radius, Vector3D location, Vector3D velocity, Color color, double scalingFactor) {
+    public Lander(String name, double mass, double radius, Vector3D location, Vector3D velocity, Color color, double scalingFactor, double canvasWidth,double canvasHeight) {
         super(name, mass, radius, location, velocity, color);
         this.scalingFactor = scalingFactor;
-        landingLocation = location.add(new Vector3D(0,titanDistance,0));
+        this.canvasWidth = canvasWidth;
+        this.canvasHeight = canvasHeight;
+
+        dispLocX = canvasWidth/2;
+        dispLocY = 1;
+        //dispLocX = 1;
+        //dispLocY = canvasHeight/2;
+        scaledLandingLocation = new Vector3D(canvasWidth/2,canvasHeight,0);
+        realLandingLocation = location.add(scaledLandingLocation);
+
+
+        double angleLander = Math.atan(dispLocY/dispLocX);
+        double angleTitan = Math.atan(scaledLandingLocation.y/scaledLandingLocation.x);
+        System.out.println((angleLander-angleTitan)*(180/Math.PI));
+
+        //you can adjust the k here for every controller
+        landingPositionX = new PIDController(timeSlice,0.0000001,0,0);
+        landingPositionY = new PIDController(timeSlice,100,0,0);
+        decelerateX = new PIDController(timeSlice,-1,0,0);
+        decelerateY = new PIDController(timeSlice,0.5,0,0);
     }
 
     public Lander(Vector3D location, Vector3D velocity, double radius, double mass, Color color, double scalingFactor) {
         super(location, velocity, radius, mass, color);
         this.scalingFactor = scalingFactor;
-        landingLocation = location.add(new Vector3D(0,titanDistance,0));
+        realLandingLocation = location.add(new Vector3D(500*scalingFactor,700*scalingFactor,0));
     }
 
     public double getScalingFactor() {
@@ -87,13 +117,15 @@ public class Lander extends Body {
 
     public double calculateWindSpeed(double height){
         double wind;
-        int highAltWind = 432000;
-        int medAltWind = highAltWind-216000;
-        int lowAltWind = 20000;
-        int groundLevelWind = 70000;
+        int highAltWind = 120000;
+        int medAltWind = highAltWind-(60000);
+        int lowAltWind = 5556;
+        int groundLevelWind = 19444;
         Random rand = new Random();
+        Random ra = new Random();
+        int windDir = ra.nextInt(3) + 0;
         if (height<150000&& height>60000){
-            wind = rand.nextInt(highAltWind+80000) + (highAltWind*0.8);
+            wind = rand.nextInt(highAltWind+22222) + (highAltWind*0.8);
         }else if(height<60000 & height>20000){
             wind = rand.nextInt(medAltWind) + (medAltWind*0.8);
         }else if(height < 20000 && height>10000){
@@ -102,26 +134,34 @@ public class Lander extends Body {
             wind = rand.nextInt(groundLevelWind) +groundLevelWind*0.1;
         }
         wind = wind*0.00044704; // to convert to m/ms
+        if (windDir == 1){
+            windDirection = false;
+            wind = wind*(0-1);
+        } else{
+            windDirection = true;
+
+        }
         windSpeed = wind;
         return wind;
     }
-
     /**
      * uses the physics system and PID controller
      * @param thrusterForce the force from the thrusters calculated by the PID
      */
     public void calculateAccelerationLanding(Vector3D thrusterForce){
         resetAcceleration();
-        double angle = Math.atan(location.y/location.x);
-        System.out.println(angle);
+        double angleLander = Math.atan(dispLocY/dispLocX);
+        double angleTitan = Math.atan(scaledLandingLocation.y/scaledLandingLocation.x);
+        //System.out.println((angleLander-angleTitan)*(180/Math.PI));
+        double angle = angleLander-angleTitan;
         double wind = calculateWindSpeed(titanDistance);
         double xacc = 0;
-        xacc = thrusterForce.x*Math.sin(angle) + wind;
-        double yacc = thrusterForce.y * Math.cos(angle) - gTitan;
+        xacc = (thrusterForce.x*Math.sin(angle)) + wind;
+        double yacc = (thrusterForce.y * Math.cos(angle)) - gTitan;
 
         //makes sure velocity doesnt pass terminal, when yacc is bigger than 0 velocity will decrease
         if (velocity.y<terminalVelocity || yacc > 0) {
-            yacc = thrusterForce.y * Math.cos(angle) - gTitan;
+            yacc = (thrusterForce.y * Math.cos(angle)) - gTitan;
         } else{
             yacc = 0;
         }
@@ -143,32 +183,32 @@ public class Lander extends Body {
     public Vector3D thrusterForce() {
         //does the angle need to be 90 or 0?
         //we can have an error of 0.1;
-        double angleNeeded = 90;
-
-            double angle = Math.atan(location.y/location.x);
-            System.out.println(angle);
-            double angleChange = angle-angleNeeded;
-            double xneeded = location.y/Math.tan(angleChange);
-            double yneeded = landingLocation.y;
-
-            //to make sure it lands in the correct position
-            double xAccPosition = controller.computeNewX(location.x,xneeded);
-            double yAccPosition = controller.computeNewY(location.y,yneeded);
-
-            //to make sure the landing velocity is 0;
-            double xAccVelocity = controller.computeNewX(velocity.x,0);
-            double yAccVelocity = controller.computeNewY(velocity.y,0);
-
-            Vector3D accelerationVector = new Vector3D(xAccPosition,yAccPosition,0);
-            accelerationVector = accelerationVector.normalize();
-
-            Vector3D reduceVelocityVector = new Vector3D(xAccVelocity,yAccVelocity,0);
-            accelerationVector = accelerationVector.normalize();
-
-            Vector3D PID = accelerationVector.add(reduceVelocityVector);
-            PID = accelerationVector;
+        double angleNeeded = 0.01*(Math.PI/180);
 
 
+
+        double angleLander = Math.atan(dispLocY/dispLocX);
+        double angleTitan = Math.atan(scaledLandingLocation.y/scaledLandingLocation.x);
+        double angle = angleLander-angleTitan;
+        double angleChange = angleNeeded-angle;
+        double xneeded = (location.y/Math.tan(angleChange));
+        double yneeded = realLandingLocation.y;
+
+        //to make sure it lands in the correct position
+        double xAccPosition = landingPositionX.compute(location.x,xneeded);
+        double yAccPosition = landingPositionY.compute(location.y,yneeded);
+
+        //to make sure the landing velocity is 0;
+        double xAccVelocity = decelerateX.compute(velocity.x,0);
+        double yAccVelocity = decelerateY.compute(velocity.y,0);
+
+        Vector3D accelerationVector = new Vector3D(xAccPosition,yAccPosition,0);
+        //System.out.println(accelerationVector.y);
+
+        Vector3D reduceVelocityVector = new Vector3D(xAccVelocity,yAccVelocity,0);
+
+
+        Vector3D PID = accelerationVector.add(reduceVelocityVector);
         return PID;
     }
 

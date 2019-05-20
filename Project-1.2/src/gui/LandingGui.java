@@ -29,7 +29,7 @@ public class LandingGui extends Application {
     private double canvasHeight = 700;
     private double canvasWidth = 1000;
 
-    private double landerSize = 3; //in reality around 10 meters
+    private double landerSize = 30; //in reality around 10 meters
 
     private double titanRad = 257470;
 
@@ -39,11 +39,10 @@ public class LandingGui extends Application {
     public void start(Stage primaryStage) throws Exception {
         //enterVelocity = bodySystem.getProbe().velocity;
 
-        Vector3D initLanderLoc = new Vector3D(0,250000,0);
+        Vector3D initLanderLoc = new Vector3D(2790,250000,0);
         Vector3D initLanderVelocity = new Vector3D(0,0,0); //
 
-        lander = new Lander("lander",100,0.01,initLanderLoc,initLanderVelocity,Color.WHITE,scalingFactor);
-
+        lander = new Lander("lander",100,0.01,initLanderLoc,initLanderVelocity,Color.WHITE,scalingFactor,canvasWidth,canvasHeight);
         GraphicsContext gc = createGui(primaryStage);
         timeline = new Timeline();
         timeline.setCycleCount(Timeline.INDEFINITE);
@@ -108,14 +107,10 @@ public class LandingGui extends Application {
 
     private void updateLanderPosition(GraphicsContext gc){
         if(lander.getTitanDistance() > 0){
-            //mathew old method without physics
-            //lander.applyGravity();
-            //lander.applyWind();
-
             //uses the pid for rotating
-            //lander.calculateAccelerationLanding(lander.thrusterForce());
+            lander.calculateAccelerationLanding(lander.thrusterForce());
             //simulate only the forces
-            lander.calculateAccelerationLanding(new Vector3D(0,0,0));
+            //lander.calculateAccelerationLanding(new Vector3D(0,0,0));
         }else{
             gc.fillText("Landed successfully!",canvasWidth/2 - 50,canvasHeight/2);
             timeline.stop();
