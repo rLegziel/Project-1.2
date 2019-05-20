@@ -236,11 +236,5 @@ public class Body {
         return acceleration;
     }
 
-    //only to be used when landing, and on the lander
-    public void landingGravCalculator(){
-        location.y = ((0.5*gTitan*(1)) + (velocity.y) + location.y) / 10;
-        velocity.y = velocity.y + gTitan;
-    }
-
 
 }
