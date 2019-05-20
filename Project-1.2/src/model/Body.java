@@ -189,7 +189,7 @@ public class Body {
      *
      * @param timeSlice the timeslice for which current acceleration should affect the body.
      */
-    public void updateVelocityAndLocation(double timeSlice) {
+    public Vector3D updateVelocityAndLocation(double timeSlice) {
         // caluclate final velocity when the time slice has occurred
         Vector3D oldVelocity = new Vector3D(this.velocity);
         updateVelocity(timeSlice);
@@ -197,7 +197,7 @@ public class Body {
         // updateVelocityAndLocation location using average velocity
         Vector3D changedVelocityAverage = new Vector3D(this.velocity).sub(oldVelocity).div(2.0);
         Vector3D averageVelocity = new Vector3D(oldVelocity).add(changedVelocityAverage);
-        updateLocation(timeSlice, averageVelocity);
+        return updateLocation(timeSlice, averageVelocity);
     }
 
     /**
@@ -216,10 +216,12 @@ public class Body {
      * @param timeSlice the timeslice for which given average velocity should affect the body.
      * @param averageVelocity the average velocity during the timeslice
      */
-    protected void updateLocation(double timeSlice, Vector3D averageVelocity) {
+    protected Vector3D updateLocation(double timeSlice, Vector3D averageVelocity) {
         //orbit.add(location);
         Vector3D locationByVelocity = new Vector3D(averageVelocity).mul(timeSlice);
         location.add(locationByVelocity);
+        return locationByVelocity;
+
     }
 
     public void addAccelerationByGravityForce(Body other) {
@@ -234,6 +236,12 @@ public class Body {
 
         Vector3D acceleration = new Vector3D(xacc,yacc,0);
         return acceleration;
+    }
+
+    //only to be used when landing, and on the lander
+    public void landingGravCalculator(){
+        location.y = ((0.5*gTitan*(1)) + (velocity.y) + location.y) / 10;
+        velocity.y = velocity.y + gTitan;
     }
 
 
