@@ -141,7 +141,7 @@ public class LandingGui extends Application {
         }else{
             gc.fillText("Landed successfully!",canvasWidth/2 - 50,canvasHeight/2);
             timeline.stop();
-            System.out.println(lander.getTitanDistance() + " " + lander.dispLocY);
+            //System.out.println(lander.getTitanDistance() + " " + lander.dispLocY);
         }
 
     }
