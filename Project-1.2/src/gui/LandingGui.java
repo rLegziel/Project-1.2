@@ -13,6 +13,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 import javafx.scene.text.Text;
+import javafx.scene.transform.Affine;
+import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import model.*;
@@ -87,8 +89,12 @@ public class LandingGui extends Application {
         gc.fillRect(0,canvasHeight-30,canvasWidth,30);
         //gc.fillOval((canvasWidth/2 - titanRad) ,canvasHeight-140,titanRad*2,titanRad*2);
 
-        gc.setFill(Color.RED);
-        gc.fillOval(lander.dispLocX,lander.dispLocY,landerSize,landerSize);
+//        gc.setFill(Color.RED);
+//        gc.fillRect(lander.dispLocX,lander.dispLocY,landerSize,landerSize);
+//        gc.rotate(30);
+
+        gc.save();
+        drawLander(gc,30 );
 
         //text for info
         gc.setFill(Color.WHITE);
@@ -103,6 +109,17 @@ public class LandingGui extends Application {
         updateLanderPosition(gc);
         //System.out.println(lander.dispLocX+" "+lander.dispLocY);
 
+    }
+
+    private void drawLander(GraphicsContext gc ,double rotationAngle){
+        double rotationCenterX = lander.dispLocX + landerSize/2;
+        double rotationCenterY = lander.dispLocY + landerSize/2;
+
+
+        gc.setFill(Color.RED);
+        gc.transform(new Affine(new Rotate(rotationAngle, rotationCenterX, rotationCenterY)));
+        gc.fillRect(lander.dispLocX,lander.dispLocY,landerSize,landerSize);
+        gc.restore();
     }
 
     private void updateLanderPosition(GraphicsContext gc){
