@@ -49,7 +49,7 @@ public class LandingGui extends Application {
         timeline = new Timeline();
         timeline.setCycleCount(Timeline.INDEFINITE);
         KeyFrame kf = new KeyFrame(
-                Duration.millis(3),
+                Duration.millis(1),
                 new EventHandler<ActionEvent>() {
                     public void handle(ActionEvent ae) {
                         updateFrame(gc);
@@ -112,13 +112,20 @@ public class LandingGui extends Application {
     }
 
     private void drawLander(GraphicsContext gc ,double rotationAngle){
-        double rotationCenterX = lander.dispLocX + landerSize/2;
-        double rotationCenterY = lander.dispLocY + landerSize/2;
 
+        double delta = 0;
+
+        if(lander.dispLocX <= 0){
+            gc.fillText("not displaying change in y",10,100);
+            delta = 0-lander.dispLocX;
+        }
+
+        double rotationCenterX = (lander.dispLocX + landerSize/2) + delta;
+        double rotationCenterY = lander.dispLocY + landerSize/2;
 
         gc.setFill(Color.RED);
         gc.transform(new Affine(new Rotate(rotationAngle, rotationCenterX, rotationCenterY)));
-        gc.fillRect(lander.dispLocX,lander.dispLocY,landerSize,landerSize);
+        gc.fillRect(lander.dispLocX + delta,lander.dispLocY,landerSize,landerSize);
         gc.restore();
     }
 
