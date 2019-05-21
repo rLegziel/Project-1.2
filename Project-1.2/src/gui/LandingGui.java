@@ -94,7 +94,8 @@ public class LandingGui extends Application {
 //        gc.rotate(30);
 
         gc.save();
-        drawLander(gc,30 );
+        drawLander(gc,lander.getAngle());
+        //drawLander(gc,90);
 
         //text for info
         gc.setFill(Color.WHITE);
@@ -105,6 +106,7 @@ public class LandingGui extends Application {
         gc.fillText("lander locationY: " + lander.location.y, canvasWidth-200,300);
         gc.fillText("distance from titan: " + lander.getTitanDistance(),canvasWidth-200,350);
         gc.fillText("actual y:" + lander.dispLocY,canvasWidth-200,400);
+        gc.fillText("lander angle: " + lander.getAngle(),canvasWidth-200,450);
 
         updateLanderPosition(gc);
         //System.out.println(lander.dispLocX+" "+lander.dispLocY);
@@ -130,7 +132,8 @@ public class LandingGui extends Application {
     }
 
     private void updateLanderPosition(GraphicsContext gc){
-        if(lander.getTitanDistance() > 0){
+        System.out.println(lander.getTitanDistance());
+        if(lander.getTitanDistance() > 28*scalingFactor){
             //uses the pid for rotating
             lander.calculateAccelerationLanding(lander.thrusterForce());
             //simulate only the forces
@@ -138,6 +141,7 @@ public class LandingGui extends Application {
         }else{
             gc.fillText("Landed successfully!",canvasWidth/2 - 50,canvasHeight/2);
             timeline.stop();
+            System.out.println(lander.getTitanDistance() + " " + lander.dispLocY);
         }
 
     }

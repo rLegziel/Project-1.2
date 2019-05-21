@@ -17,10 +17,12 @@ public class Lander extends Body {
 
     private double windSpeed;
     private boolean windDirection; // if true, wind direction is west(will go positive), if negative- wind direction will go east(negative x values)
-
+    private int windCounter;
 
     public double dispLocX;
     public double dispLocY;
+
+    private double angle;
 
     //PID controllers to control the speed and landing speed
     private PIDController landingPositionX;
@@ -32,7 +34,7 @@ public class Lander extends Body {
 
 
     //not sure if this correct
-    private double timeSlice = 0.5;
+    private double timeSlice = 5;
 
 
 
@@ -54,12 +56,12 @@ public class Lander extends Body {
 
         double angleLander = Math.atan(dispLocY/dispLocX);
         double angleTitan = Math.atan(scaledLandingLocation.y/scaledLandingLocation.x);
-        System.out.println((angleLander-angleTitan)*(180/Math.PI));
+        //System.out.println((angleLander-angleTitan)*(180/Math.PI));
 
         //you can adjust the k here for every controller
-        landingPositionX = new PIDController(timeSlice,0.0000001,0,0);
+        landingPositionX = new PIDController(timeSlice,0.0000001,0,0.1);
         landingPositionY = new PIDController(timeSlice,100,0,0);
-        decelerateX = new PIDController(timeSlice,-1,0,0);
+        decelerateX = new PIDController(timeSlice,-1,0,0.001);
         decelerateY = new PIDController(timeSlice,0.5,0,0);
     }
 
@@ -107,7 +109,7 @@ public class Lander extends Body {
 
 
     public void applyWind(){
-        windSpeed = calculateWindSpeed(titanDistance);
+        windSpeed = calculateWindSpeed(titanDistance,windCounter);
         location.x = location.x + (windSpeed);
         velocity.x = velocity.x + windSpeed;
         dispLocX += windSpeed/scalingFactor;
@@ -115,34 +117,37 @@ public class Lander extends Body {
         System.out.println(windSpeed);
     }
 
-    public double calculateWindSpeed(double height){
+    public double calculateWindSpeed(double height,int windCounter) {
         double wind;
-        int highAltWind = 120000;
-        int medAltWind = highAltWind-(60000);
-        int lowAltWind = 5556;
-        int groundLevelWind = 19444;
+        double highAltWind = 0.12;
+        double medAltWind = 0.6;
+        double lowAltWind = 0.056;
+        double groundLevelWind = 0.002;
         Random rand = new Random();
         Random ra = new Random();
-        int windDir = ra.nextInt(3) + 0;
-        if (height<150000&& height>60000){
-            wind = rand.nextInt(highAltWind+22222) + (highAltWind*0.8);
-        }else if(height<60000 & height>20000){
-            wind = rand.nextInt(medAltWind) + (medAltWind*0.8);
-        }else if(height < 20000 && height>10000){
-            wind = rand.nextInt(lowAltWind) + lowAltWind*0.5;
-        } else{
-            wind = rand.nextInt(groundLevelWind) +groundLevelWind*0.1;
-        }
-        wind = wind*0.00044704; // to convert to m/ms
-        if (windDir == 1){
-            windDirection = false;
-            wind = wind*(0-1);
-        } else{
-            windDirection = true;
+        if (windCounter % 1000== 0) {
+            int windDir = ra.nextInt(3) + 0;
+            if (height < 200000 && height > 60000) {
+                wind = (highAltWind * 0.8) + (highAltWind-(highAltWind * 0.8)) * rand.nextDouble();
+            } else if (height < 60000 & height > 20000) {
+                wind = (medAltWind * 0.8) + (medAltWind-(medAltWind * 0.8)) *rand.nextDouble() ;
+            } else if (height < 20000 && height > 10000) {
+                wind = (lowAltWind * 0.5) + (lowAltWind -(lowAltWind * 0.5) ) *  rand.nextDouble() ;
+            } else {
+                wind =(groundLevelWind * 0.1) + (groundLevelWind-(groundLevelWind * 0.1)) *  rand.nextDouble() ;
+            }
+            // to convert to m/ms
+            if (windDir == 1) {
+                windDirection = false;
+                wind = wind * (0 - 1);
+            } else {
+                windDirection = true;
 
+            }
+            windSpeed = wind;
+            return wind;
         }
-        windSpeed = wind;
-        return wind;
+        return windSpeed;
     }
     /**
      * uses the physics system and PID controller
@@ -150,14 +155,17 @@ public class Lander extends Body {
      */
     public void calculateAccelerationLanding(Vector3D thrusterForce){
         resetAcceleration();
+        windCounter++;
         double angleLander = Math.atan(dispLocY/dispLocX);
         double angleTitan = Math.atan(scaledLandingLocation.y/scaledLandingLocation.x);
         //System.out.println((angleLander-angleTitan)*(180/Math.PI));
-        double angle = angleLander-angleTitan;
-        double wind = calculateWindSpeed(titanDistance);
+        angle = angleLander-angleTitan;
+        double wind = calculateWindSpeed(titanDistance,windCounter);
         double xacc = 0;
         xacc = (thrusterForce.x*Math.sin(angle)) + wind;
         double yacc = (thrusterForce.y * Math.cos(angle)) - gTitan;
+        //System.out.println("u: " + Math.sqrt(Math.pow(thrusterForce.x,2)+Math.pow(thrusterForce.y,2)));
+        //System.out.println("angle: " + angle);
 
         //makes sure velocity doesnt pass terminal, when yacc is bigger than 0 velocity will decrease
         if (velocity.y<terminalVelocity || yacc > 0) {
@@ -210,6 +218,11 @@ public class Lander extends Body {
 
         Vector3D PID = accelerationVector.add(reduceVelocityVector);
         return PID;
+    }
+
+    public double getAngle(){
+        //System.out.println(angle*(180/Math.PI));
+        return angle*(180/Math.PI);
     }
 
 
