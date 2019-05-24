@@ -33,7 +33,7 @@ public class LandingGui extends Application {
     private boolean changed1 = false;
     private boolean changed2 = false;
     private boolean changed3 = false;
-    private boolean changedX = false;
+    private boolean changed4 = false;
 
     private double landerSize = 30; //in reality around 10 meters
 
@@ -142,9 +142,10 @@ public class LandingGui extends Application {
             lander.calculateAccelerationLanding(lander.thrusterForce());
             //simulate only the forces
             //lander.calculateAccelerationLanding(new Vector3D(0,0,0));
-            if(lander.getTitanDistance() < 15000 && changed1 == false){
-                lander.changeYPID(1,5,0.0000000001,15);
+            if(lander.getTitanDistance() < 17500 && changed1 == false){
+                lander.changeYPID(1,7,0.0001,10); // seems like the optimal, will lead to landing at y speed of about 0.27 m/s which is about 1 km/h.
                 changed1 = true;
+                // the ki is 0.0000001 , kp is 7
             }
             if (lander.getTitanDistance()<40000 && changed2 == false){
                 lander.changeYPID(1,1,0.0000000001,10);
@@ -155,6 +156,7 @@ public class LandingGui extends Application {
                 lander.changeYPID(1,2,0.0000000001,10);
                 changed3 = true;
             }
+
 
         } else {
             gc.fillText("Landed successfully!", canvasWidth / 2 - 50, canvasHeight / 2);
