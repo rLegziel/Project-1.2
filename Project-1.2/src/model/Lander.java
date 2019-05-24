@@ -70,7 +70,7 @@ public class Lander extends Body {
         dispLocY = 1;
         //dispLocX = 1;
         //dispLocY = canvasHeight/2;
-        scaledLandingLocation = new Vector3D(0, canvasHeight-50, 0);
+        scaledLandingLocation = new Vector3D(canvasWidth/2, canvasHeight-50, 0);
         realLandingLocation = location.add(scaledLandingLocation);
         realLandingLocationx = location.x + scaledLandingLocation.x;
 
