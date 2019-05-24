@@ -30,6 +30,10 @@ public class LandingGui extends Application {
     private Timeline timeline;
     private double canvasHeight = 700;
     private double canvasWidth = 1000;
+    private boolean changed1 = false;
+    private boolean changed2 = false;
+    private boolean changed3 = false;
+    private boolean changedX = false;
 
     private double landerSize = 30; //in reality around 10 meters
 
@@ -41,10 +45,10 @@ public class LandingGui extends Application {
     public void start(Stage primaryStage) throws Exception {
         //enterVelocity = bodySystem.getProbe().velocity;
 
-        Vector3D initLanderLoc = new Vector3D(2790,250000,0);
-        Vector3D initLanderVelocity = new Vector3D(0,0,0); //
+        Vector3D initLanderLoc = new Vector3D(2790, 250000, 0);
+        Vector3D initLanderVelocity = new Vector3D(0, 0, 0); //
 
-        lander = new Lander("lander",100,0.01,initLanderLoc,initLanderVelocity,Color.WHITE,scalingFactor,canvasWidth,canvasHeight);
+        lander = new Lander("lander", 100, 0.01, initLanderLoc, initLanderVelocity, Color.WHITE, scalingFactor, canvasWidth, canvasHeight);
         GraphicsContext gc = createGui(primaryStage);
         timeline = new Timeline();
         timeline.setCycleCount(Timeline.INDEFINITE);
@@ -69,7 +73,7 @@ public class LandingGui extends Application {
 
         HBox hbox = new HBox();
         border.setBottom(hbox);
-        Canvas canvas = new Canvas(canvasWidth,canvasHeight);
+        Canvas canvas = new Canvas(canvasWidth, canvasHeight);
         border.setCenter(canvas);
         stage.setTitle("Landing simulation");
 
@@ -86,7 +90,7 @@ public class LandingGui extends Application {
 
         //draw the ground;
         gc.setFill(Color.ORANGE);
-        gc.fillRect(0,canvasHeight-30,canvasWidth,30);
+        gc.fillRect(0, canvasHeight - 30, canvasWidth, 30);
         //gc.fillOval((canvasWidth/2 - titanRad) ,canvasHeight-140,titanRad*2,titanRad*2);
 
 //        gc.setFill(Color.RED);
@@ -94,56 +98,69 @@ public class LandingGui extends Application {
 //        gc.rotate(30);
 
         gc.save();
-        drawLander(gc,lander.getAngle());
+        drawLander(gc, lander.getAngle());
         //drawLander(gc,90);
 
         //text for info
         gc.setFill(Color.WHITE);
-        gc.fillText("wind speed: " + lander.getWindSpeed() + " mph",canvasWidth-200,100);
-        gc.fillText("lander speedX: " + lander.velocity.x, canvasWidth-200,150);
-        gc.fillText("lander speedY: " + lander.velocity.y, canvasWidth-200,200);
-        gc.fillText("lander locationX: " + lander.location.x, canvasWidth-200,250);
-        gc.fillText("lander locationY: " + lander.location.y, canvasWidth-200,300);
-        gc.fillText("distance from titan: " + lander.getTitanDistance(),canvasWidth-200,350);
-        gc.fillText("actual y:" + lander.dispLocY,canvasWidth-200,400);
-        gc.fillText("lander angle: " + lander.getAngle(),canvasWidth-200,450);
+        gc.fillText("wind speed: " + lander.getWindSpeed() + " mph", canvasWidth - 200, 100);
+        gc.fillText("lander speedX: " + lander.velocity.x, canvasWidth - 200, 150);
+        gc.fillText("lander speedY: " + lander.velocity.y, canvasWidth - 200, 200);
+        gc.fillText("lander locationX: " + lander.location.x, canvasWidth - 200, 250);
+        gc.fillText("lander locationY: " + lander.location.y, canvasWidth - 200, 300);
+        gc.fillText("distance from titan: " + lander.getTitanDistance(), canvasWidth - 200, 350);
+        gc.fillText("actual y:" + lander.dispLocY, canvasWidth - 200, 400);
+        gc.fillText("lander angle: " + lander.getAngle(), canvasWidth - 200, 450);
 
         updateLanderPosition(gc);
         //System.out.println(lander.dispLocX+" "+lander.dispLocY);
 
     }
 
-    private void drawLander(GraphicsContext gc ,double rotationAngle){
+    private void drawLander(GraphicsContext gc, double rotationAngle) {
 
         double delta = 0;
 
-        if(lander.dispLocX <= 0){
-            gc.fillText("not displaying change in y",10,100);
-            delta = 0-lander.dispLocX;
+        if (lander.dispLocX <= 0) {
+            gc.fillText("not displaying change in y", 10, 100);
+            delta = 0 - lander.dispLocX;
         }
 
-        double rotationCenterX = (lander.dispLocX + landerSize/2) + delta;
-        double rotationCenterY = lander.dispLocY + landerSize/2;
+        double rotationCenterX = (lander.dispLocX + landerSize / 2) + delta;
+        double rotationCenterY = lander.dispLocY + landerSize / 2;
 
         gc.setFill(Color.RED);
         gc.transform(new Affine(new Rotate(rotationAngle, rotationCenterX, rotationCenterY)));
-        gc.fillRect(lander.dispLocX + delta,lander.dispLocY,landerSize,landerSize);
+        gc.fillRect(lander.dispLocX + delta, lander.dispLocY, landerSize, landerSize);
         gc.restore();
     }
 
-    private void updateLanderPosition(GraphicsContext gc){
-        System.out.println(lander.getTitanDistance());
-        if(lander.getTitanDistance() > 28*scalingFactor){
+    private void updateLanderPosition(GraphicsContext gc) {
+//        System.out.println(lander.getTitanDistance());
+        if (lander.getTitanDistance() > 28 * scalingFactor) {
             //uses the pid for rotating
             lander.calculateAccelerationLanding(lander.thrusterForce());
             //simulate only the forces
             //lander.calculateAccelerationLanding(new Vector3D(0,0,0));
-        }else{
-            gc.fillText("Landed successfully!",canvasWidth/2 - 50,canvasHeight/2);
-            timeline.stop();
+            if(lander.getTitanDistance() < 15000 && changed1 == false){
+                lander.changeYPID(1,5,0.0000000001,15);
+                changed1 = true;
+            }
+            if (lander.getTitanDistance()<40000 && changed2 == false){
+                lander.changeYPID(1,1,0.0000000001,10);
+//                lander.changeXLPID(1,0.0001,0,0.1); // optimal
+                changed2 = true;
+            }
+            if(lander.getTitanDistance()<30000&& changed3 == false){
+                lander.changeYPID(1,2,0.0000000001,10);
+                changed3 = true;
+            }
+
+        } else {
+            gc.fillText("Landed successfully!", canvasWidth / 2 - 50, canvasHeight / 2);
+
             //System.out.println(lander.getTitanDistance() + " " + lander.dispLocY);
         }
 
     }
-
 }
