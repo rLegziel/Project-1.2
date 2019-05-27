@@ -99,7 +99,7 @@ public class BodySystem {
             if (realProbesList.size()>=2) {
                 double differenceInTime = timeClosestToTitan - elapsedSeconds;
                 double timeToGetThere = differenceInTime;
-                //useEngine(xTitan, yTitan, zTitan, timeToGetThere, timeSlice);
+                useEngine(xTitan, yTitan, zTitan, timeToGetThere, timeSlice);
             }
         }
 
@@ -135,7 +135,6 @@ public class BodySystem {
             double distance = realProbesList.get(1).location.probeDistance(bodies.get(10).location);
             if (distance < 1000000000) {
                 checkLocationtoTitan(bodies.get(10));
-                //updateForLanding(timeSlice,timeline);
             }
         }
 
@@ -154,34 +153,6 @@ public class BodySystem {
         return timeSlice;
     }
 
-    /**
-     * this will be the method to call when the landing GUI pops up
-     * it's still very basic because it's hard to program when there is no GUI to test on
-     */
-    public double updateForLanding(double timeSlice, Timeline timeline) {
-        //does the angle need to be 90 or 0?
-        //we can have an error of 0.1;
-        double angleNeeded = 0.1;
-        for (int i = 0; i<realProbesList.size();i++){
-            double angle = Math.atan(realProbesList.get(i).location.y/realProbesList.get(i).location.x);
-            double angleChange = angle-angleNeeded;
-            double xneeded = realProbesList.get(i).location.y/Math.tan(angleChange);
-            double yneeded = bodies.get(10).location.y;
-
-            double xAcc = controller.computeNewX(realProbesList.get(i).location.x,xneeded);
-            double yAcc = controller.computeNewY(realProbesList.get(i).location.y,yneeded);
-
-            Vector3D accelerationVector = new Vector3D(xAcc,yAcc,0);
-            accelerationVector = accelerationVector.normalize();
-            //System.out.println(accelerationVector.x);
-
-            Vector3D actualAcceleration = realProbesList.get(0).calculateAccelerationLanding(bodies.get(10),accelerationVector,new Vector3D());
-            realProbesList.get(i).acceleration=actualAcceleration;
-
-        }
-
-        return timeSlice;
-    }
 
 
     /**

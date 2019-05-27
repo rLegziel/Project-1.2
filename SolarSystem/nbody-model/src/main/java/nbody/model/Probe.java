@@ -85,15 +85,5 @@ public class Probe extends Body {
     }
 
 
-    public Vector3D calculateAccelerationLanding(Body titan, Vector3D thrusterForce, Vector3D wind){
-        double angle = Math.atan(location.y/location.x);
-        double height = location.y - titan.location.y;
-        double xacc = thrusterForce.x*Math.sin(angle) + wind.x;
-        double yacc = thrusterForce.y*Math.cos(angle) - Physics.gTitan;
-
-        Vector3D acceleration = new Vector3D(xacc,yacc,0);
-        return acceleration;
-    }
-
 
 }
