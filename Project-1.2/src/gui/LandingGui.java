@@ -112,9 +112,9 @@ public class LandingGui extends Application {
         gc.fillText("lander speedY: " + chosenLander.velocity.y, canvasWidth - 200, 200);
         gc.fillText("lander locationX: " + chosenLander.location.x, canvasWidth - 200, 250);
         gc.fillText("lander locationY: " + chosenLander.location.y, canvasWidth - 200, 300);
-        gc.fillText("distance from titan: " + chosenLander.getTitanDistance(), canvasWidth - 200, 350);
-        gc.fillText("actual y:" + chosenLander.dispLocY, canvasWidth - 200, 400);
-        gc.fillText("lander angle: " + chosenLander.getAngle(), canvasWidth - 200, 450);
+        //gc.fillText("distance from titan: " + chosenLander.getTitanDistance(), canvasWidth - 200, 350);
+        gc.fillText("actual y:" + chosenLander.dispLocY, canvasWidth - 200, 350);
+        gc.fillText("lander angle: " + chosenLander.getAngle(), canvasWidth - 200, 400);
 
         updateLanderPosition(gc,chosenLander);
         //System.out.println(lander.dispLocX+" "+lander.dispLocY);
@@ -252,7 +252,7 @@ public class LandingGui extends Application {
                   m1x = c1x / i1;
                   m1y = c1y / i1;
 
-                  System.out.println("x1: " + m1x + " y1: " + m1y);
+                  //System.out.println("x1: " + m1x + " y1: " + m1y);
               }
 
           } else if (lander.getTitanDistance() < 200000 && lander.getTitanDistance() > 150000) {
@@ -265,7 +265,7 @@ public class LandingGui extends Application {
                   m2x = c2x / i2;
                   m2y = c2y / i2;
 
-                  System.out.println("x2: " + m2x + " y2: " + m2y);
+                  //System.out.println("x2: " + m2x + " y2: " + m2y);
               }
 
           } else if (lander.getTitanDistance() < 150000 && lander.getTitanDistance() > 100000) {
@@ -278,7 +278,7 @@ public class LandingGui extends Application {
                   m3x = c3x / i3;
                   m3y = c3y / i3;
 
-                  System.out.println("x3: " + m3x + " y3: " + m3y);
+                  //System.out.println("x3: " + m3x + " y3: " + m3y);
               }
 
           } else if (lander.getTitanDistance() < 100000 && lander.getTitanDistance() > 50000) {
@@ -291,7 +291,7 @@ public class LandingGui extends Application {
                   m4x = c4x / i4;
                   m4y = c4y / i4;
 
-                  System.out.println("x4: " + m4x + " y4: " + m4y);
+                  //System.out.println("x4: " + m4x + " y4: " + m4y);
               }
 
           } else if (lander.getTitanDistance() < 50000 && lander.getTitanDistance() > 10000) {
@@ -304,7 +304,7 @@ public class LandingGui extends Application {
                   m5x = c5x / i5;
                   m5y = c5y / i5;
 
-                  System.out.println("x5: " + m5x + " y5: " + m5y);
+                  //System.out.println("x5: " + m5x + " y5: " + m5y);
               }
 
           } else if (lander.getTitanDistance() < 10000 && lander.getTitanDistance() > 500) {
@@ -317,7 +317,7 @@ public class LandingGui extends Application {
                   m6x = c6x / i6;
                   m6y = c6y / i6;
 
-                  System.out.println("x6: " + m6x + " y6: " + m6y);
+                  //System.out.println("x6: " + m6x + " y6: " + m6y);
               }
           }
 

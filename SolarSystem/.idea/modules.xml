@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/nbody.iml" filepath="$PROJECT_DIR$/nbody.iml" />
+      <module fileurl="file://$PROJECT_DIR$/nbody-javafx/nbody-javafx.iml" filepath="$PROJECT_DIR$/nbody-javafx/nbody-javafx.iml" />
+      <module fileurl="file://$PROJECT_DIR$/nbody-model/nbody-model.iml" filepath="$PROJECT_DIR$/nbody-model/nbody-model.iml" />
+    </modules>
+  </component>
+</project>
