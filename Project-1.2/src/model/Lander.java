@@ -16,7 +16,11 @@ public class Lander extends Body {
 
     private Vector3D realLandingLocation;
     private Vector3D scaledLandingLocation;
+    private Vector3D scaledSpaceshipLocation;
+    private Vector3D realSpaceshipLocation;
     private final double realLandingLocationx;
+
+    private boolean isLanding;
 
     private double windSpeed;
     private boolean windDirection; // if true, wind direction is west(will go positive), if negative- wind direction will go east(negative x values)
@@ -31,6 +35,7 @@ public class Lander extends Body {
     //PID controllers to control the speed and landing speed
     private PIDController anglePIDx;
     private PIDController landingPositionX;
+    private PIDController spaceshipPositionY;
     private PIDController decelerateX;
     private PIDController decelerateY;
 
@@ -47,21 +52,18 @@ public class Lander extends Body {
         landingPositionY = new PIDController(timeSlice, 0.0001, 0.1, 1);
         decelerateX = new PIDController(timeSlice, -1, -0.000000001, 0.000000000001);
         decelerateY = new PIDController(timeSlice, 0.5, 0.0000000001, 10); // was 0.5
-
         TODO:
         1)make the xPID controllers less aggressive to start with, and gradually make them more and more aggressive,
         to do this, can use the current boolean flags in the GUI(changed1,2,3...) to change the xPID values also.
         do this using the method
         Not sure if this is possible, effects rotation verry much.
-
         2) distance to titan or speed are way off. meaning that even at very slow speed we are still moving very fast in real life.
-
      */
 
 
 
     public Lander(String name, double mass, double radius, Vector3D location, Vector3D velocity, Color color, double scalingFactor, double canvasWidth, double canvasHeight) {
-        super(name, mass, radius, location, velocity, color);
+        super(name, mass, radius, location, velocity, color, 1);
         this.scalingFactor = scalingFactor;
         this.canvasWidth = canvasWidth;
         this.canvasHeight = canvasHeight;
@@ -71,9 +73,13 @@ public class Lander extends Body {
         //dispLocX = 1;
         //dispLocY = canvasHeight/2;
         scaledLandingLocation = new Vector3D(canvasWidth/2, canvasHeight-50, 0);
+        scaledSpaceshipLocation = new Vector3D(canvasWidth/2, 30, 0);
+        realSpaceshipLocation = new Vector3D(location);
         realLandingLocation = location.add(scaledLandingLocation);
         realLandingLocationx = location.x + scaledLandingLocation.x;
 
+
+        isLanding = true;
 
         double angleLander = Math.atan(dispLocY / dispLocX);
         double angleTitan = Math.atan(scaledLandingLocation.y / scaledLandingLocation.x);
@@ -84,6 +90,7 @@ public class Lander extends Body {
         anglePIDx = new PIDController(timeSlice, 0.0001, 0, 0.1);
         //this is the new controller that sets where to land
         landingPositionX = new PIDController(timeSlice,-75,0,0);
+        spaceshipPositionY = new PIDController(timeSlice,0.00001,0,0);
         decelerateX = new PIDController(timeSlice, -1, -0.000000001, 0.000000000001);
         decelerateY = new PIDController(timeSlice, 0.5, 0.0000000001, 10); // was 0.5
     }
@@ -100,6 +107,12 @@ public class Lander extends Body {
     public void changeXDPID(double timeSlice,double kp,double ki,double kd){
         decelerateX = new PIDController(timeSlice,kp,ki,kd);
     }
+
+    public void changeYLocationPID(double timeSlice,double kp,double ki,double kd){
+        spaceshipPositionY = new PIDController(timeSlice,kp,ki,kd);
+    }
+
+
 
 
     public double getScalingFactor() {
@@ -165,10 +178,16 @@ public class Lander extends Body {
         velocity.x = 0;
 //        System.out.println(velocity.x + " is my xVelocity right now, after reset reset.");
         windCounter++;
-        double angleLander = Math.atan(dispLocY / dispLocX);
-        double angleTitan = Math.atan(scaledLandingLocation.y / scaledLandingLocation.x);
-        //System.out.println((angleLander-angleTitan)*(180/Math.PI));
-        double angle = angleLander - angleTitan;
+        if (isLanding){
+            double angleLander = Math.atan(dispLocY / dispLocX);
+            double angleTitan = Math.atan(scaledLandingLocation.y / scaledLandingLocation.x);
+            angle = angleLander - angleTitan;
+        } else{
+            double angleLander = Math.atan(dispLocY / dispLocX);
+            double angleSpaceship = Math.atan(scaledSpaceshipLocation.y / scaledSpaceshipLocation.x);
+            angle = angleLander - angleSpaceship;
+        }
+
         double wind = calculateWindSpeed(titanDistance,windCounter);
         //System.out.println(" we are now at height: " + titanDistance + " and the wind speed is " + wind);
         double xacc = 0;
@@ -179,7 +198,7 @@ public class Lander extends Body {
         //makes sure velocity doesnt pass terminal, when yacc is bigger than 0 velocity will decrease
         if (velocity.y < terminalVelocity || yacc > 0) {
             yacc = (thrusterForce.y * Math.cos(angle)) - gTitan;
-        } else {
+        } else if (isLanding) {
             yacc = 0;
             velocity.y = terminalVelocity;
         }
@@ -198,16 +217,53 @@ public class Lander extends Body {
 
     }
 
+
+
     //the actual force by the thruster calculated by the PID
-    public Vector3D thrusterForce() {
+    //this is the method called for ascending
+    public Vector3D thrusterForceAscending() {
         //does the angle need to be 90 or 0?
+        //we can have an error of 0.1;
+
+        if (velocity.y<terminalVelocity&&titanDistance>50000){
+            changeYLocationPID(timeSlice,0.00001,0.00000000000000000001,0.01);
+        }
+
+        double angleNeeded = 0.01 * (Math.PI / 180);
+
+
+        double angleLander = Math.atan(dispLocY / dispLocX);
+        double angleTitan = Math.atan(scaledSpaceshipLocation.y / scaledSpaceshipLocation.x);
+        double angle = angleLander - angleTitan;
+        double angleChange = angleNeeded - angle;
+
+        double xAngle = (location.y / Math.tan(angleChange));
+
+
+        //to make sure it lands in the correct angle
+        double xAccAngle = anglePIDx.compute(location.x, xAngle);
+
+
+
+        double yAccPosition = spaceshipPositionY.compute(location.y,realSpaceshipLocation.y);
+
+
+        Vector3D accelerationVector = new Vector3D(xAccAngle, yAccPosition, 0);
+
+
+        return accelerationVector;
+    }
+
+
+    //PID for the landing
+    public Vector3D thrusterForceLanding() {
         //we can have an error of 0.1;
         double angleNeeded = 0.01 * (Math.PI / 180);
 
 
         double angleLander = Math.atan(dispLocY / dispLocX);
         double angleTitan = Math.atan(scaledLandingLocation.y / scaledLandingLocation.x);
-        angle = angleLander - angleTitan;
+        double angle = angleLander - angleTitan;
         double angleChange = angleNeeded - angle;
 
         double xAngle = (location.y / Math.tan(angleChange));
@@ -236,11 +292,13 @@ public class Lander extends Body {
         PID.add(new Vector3D(xAccPosition,0,0));
         return PID;
     }
+
+    //openloop controller
     public Vector3D getOLCThrusterForce() {
 
-      double angleLander = Math.atan(dispLocY / dispLocX);
-      double angleTitan = Math.atan(scaledLandingLocation.y / scaledLandingLocation.x);
-      angle = angleLander - angleTitan;
+        double angleLander = Math.atan(dispLocY / dispLocX);
+        double angleTitan = Math.atan(scaledLandingLocation.y / scaledLandingLocation.x);
+        angle = angleLander - angleTitan;
 
         if(titanDistance > 200000){
             return new Vector3D(20.976217403347164/2,3.4283613115597915/2,0);
@@ -270,8 +328,12 @@ public class Lander extends Body {
     public ArrayList<Double> getPIDinput(){
         return PIDinput;
     }
+
+    public void markAsLanded() {
+        isLanding = false;
+    }
+
+    public boolean getIsLanding(){
+        return isLanding;
+    }
 }
-
-
-
-

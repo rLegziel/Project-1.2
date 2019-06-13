@@ -9,51 +9,65 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import model.BodySystem;
 import model.CoordinatesTransformer;
 import model.SolarSystem;
+import model.Vector3D;
 
 import java.awt.*;
 
-import static com.sun.javafx.scene.control.skin.Utils.getResource;
 
-
+/**
+ * Gui representing the solar system using javafx.
+ *
+ * Note that javafx uses a coordinate system with origin top left.
+ */
 public class Gui extends Application {
+    /** Number of seconds to update the model with for each iteration (delta T) */
+    public static final double TIME_SLICE = 60 * 20; // used to be 60*30
 
-    public static double TIME_SLICE = 60*30;
-    public static final double INITIAL_SCALE = 5e9;
+    /** initial scale pixel/meter */
+    public static final double INITIAL_SCALE = 13e8 ; // was 5e9
+
+    /** radius in pixels of body in gui */
     public static final double BODY_RADIUS_GUI = 2;
+
+    private double spaceshipSize = 4.5;
+
     private static final int BOTTOM_AREA_HEIGHT = 100;
 
-    private model.BodySystem bodySystem;
-    private model.CoordinatesTransformer transformer = new CoordinatesTransformer();
+    /** bodies in system rendered by gui */
+    private BodySystem bodySystem;
+
+    /** transforms between coordinates in model and coordinates in gui */
+    private CoordinatesTransformer transformer = new CoordinatesTransformer();
+
+    private javafx.scene.image.Image spaceshipImg = new Image("res/spaceship.png");
+
+//    /** utility for counting frames per second */
+//    private FPSCounter fps = new FPSCounter();
 
     private double canvasWidth = 0;
     private double canvasHeight = 0;
-    private model.Vector3D dragPosStart;
-    private Label dateLabel;
-    private Label launchDateLabel;
-    private Label elapsedTimeLabel;
-    private Label probeSpeedLabel;
-    private Label distanceLabel;
-    private Label fuelStatusLabel;
-    private Label missionStatusLabel;
-
-    private boolean simStarted = false;
-    private GraphicsContext gc2;
+    private Vector3D dragPosStart;
+    private Label timeLabel;
+    private Label fpsLabel;
+    private Label scaleLabel;
 
     private Timeline timeline;
+    private Stage stage;
 
-    private int interval = 31556926/4;
 
     @Override
     public void start(Stage stage) {
+        this.stage = stage;
         createBodies();
         transformer.setScale(INITIAL_SCALE);
         transformer.setOriginXForOther(500);
@@ -70,43 +84,64 @@ public class Gui extends Application {
                 });
         timeline.getKeyFrames().add(kf);
         timeline.play();
-        EventHandler<javafx.scene.input.MouseEvent> eventHandlerBox =
-                new EventHandler<javafx.scene.input.MouseEvent>() {
-                    @Override
-                    public void handle(javafx.scene.input.MouseEvent e) {
-                        timeline.stop();
-                    }
-                };
         stage.show();
-        startLandingSim(stage);
     }
 
+    /**
+     * Draw a frame
+     *
+     * @param gc, a graphicsContext object.
+     *
+     */
     protected void updateFrame(GraphicsContext gc) {
+        if(bodySystem.minDistanceTitan < 1.0E9){
+            System.out.println(bodySystem.getElapsedTime());
+            timeline.stop();
+            stage.close();
+            try {
+                new LandingGui().start(new Stage());
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("not working");
+            }
+        }
         this.canvasWidth = gc.getCanvas().getWidth();
         this.canvasHeight = gc.getCanvas().getHeight();
         gc.clearRect(0, 0, canvasWidth, canvasHeight);
 
-        for (model.Body body : bodySystem.getBodies()) {
+        for (int i = 0; i<bodySystem.getBodies().size();i++) {
 
-            double otherX = transformer.modelToOtherX(body.location.x);
-            double otherY = transformer.modelToOtherY(body.location.y);
 
-            // draw object circle
-            gc.setFill(body.getColor());
+            double otherX = transformer.modelToOtherX(bodySystem.getBodies().get(i).location.x);
+            double otherY = transformer.modelToOtherY(bodySystem.getBodies().get(i).location.y);
 
-            if(body.getColor().equals(Color.HOTPINK)){//one way to know its a probe
-                gc.fillOval(otherX - BODY_RADIUS_GUI, otherY - BODY_RADIUS_GUI, BODY_RADIUS_GUI * 2, BODY_RADIUS_GUI); //so its more oval and looks like a ship
-            }else{
-                gc.fillOval(otherX - BODY_RADIUS_GUI, otherY - BODY_RADIUS_GUI, BODY_RADIUS_GUI * 2, BODY_RADIUS_GUI * 2);
-
+            double scale = bodySystem.getBodies().get(i).scale * 5;
+            // draw circle
+            gc.setFill(bodySystem.getBodies().get(i).color);
+            if(i == 11){
+                gc.setFill(Color.TRANSPARENT);
+                gc.drawImage(spaceshipImg,otherX - BODY_RADIUS_GUI, otherY - BODY_RADIUS_GUI, spaceshipSize * 2 + scale, spaceshipSize * 2 + scale);
             }
-            // draw label
-            Text text = new Text(body.name);
-            gc.fillText(body.name, otherX - (text.getLayoutBounds().getWidth() / 2), otherY - BODY_RADIUS_GUI - (text.getLayoutBounds().getHeight() / 2));
+            gc.fillOval(otherX - BODY_RADIUS_GUI, otherY - BODY_RADIUS_GUI, BODY_RADIUS_GUI * 2 + scale, BODY_RADIUS_GUI * 2 + scale);
+
+            gc.setFill(Color.WHITE);
+            //  label
+            Text text = new Text(bodySystem.getBodies().get(i).name);
+            gc.fillText(bodySystem.getBodies().get(i).name, otherX - (text.getLayoutBounds().getWidth() / 2), otherY - BODY_RADIUS_GUI - (text.getLayoutBounds().getHeight() / 2));
         }
+
+
 
         bodySystem.update(TIME_SLICE, timeline);
         //timeLabel.setText(bodySystem.getElapsedTimeAsString() + " Distance " + bodySystem.currentDistance);
+        //bodySystem.check1(); ////// REPLACE WITH COLLISION
+        /*if(bodySystem.getElapsedTime() > interval){
+            bodySystem.checkCollision();
+            interval += 31556926/4;
+        }*/
+
+        //fpsLabel.setText("Distance: " + bodySystem.currentDistance);
+        //scaleLabel.setText(String.format("Scale: %d km/pixel", Math.round(transformer.getScale()/1000)));
     }
 
     protected void createBodies() {
@@ -114,22 +149,16 @@ public class Gui extends Application {
     }
 
     private GraphicsContext createGui(Stage stage) {
-
         String image = "res/stars_background.jpg";
 
-
         BorderPane border = new BorderPane();
-        //border.setStyle("-fx-background-color: #000000;");
         border.setStyle("-fx-background-image: url('" + image + "'); ");
 
-        createDateLabel();
-        createSpeedLabel();
-        createDistanceLabel();
-        createFuelLabel();
-        createMissionStatusLabelLabel();
-
-        HBox hbox = createHBox();
-        border.setBottom(hbox);
+        createTimeLabel();
+//        createFPSLabel();
+        createScaleLabel();
+        //HBox hbox = createHBox();
+       // border.setBottom(hbox);
         Canvas canvas = createCanvas();
         border.setCenter(canvas);
         stage.setTitle("NBody simulation");
@@ -137,22 +166,26 @@ public class Gui extends Application {
         stage.setScene(scene);
         stage.setMaximized(true);
 
-
         // Bind canvas size to stack pane size.
         canvas.widthProperty().bind(stage.widthProperty());
-        canvas.heightProperty().bind(stage.heightProperty().subtract(BOTTOM_AREA_HEIGHT));
+        canvas.heightProperty().bind(stage.heightProperty());
+        //canvas.heightProperty().bind(stage.heightProperty().subtract(BOTTOM_AREA_HEIGHT));
         return canvas.getGraphicsContext2D();
     }
 
+    /**
+     * @return a resizable canvas
+     */
     private Canvas createCanvas() {
         Canvas canvas = new ResizableCanvas();
+
         // dragging of map
-        canvas.setOnDragDetected((event) -> this.dragPosStart = new model.Vector3D(event.getX(), event.getY(), 0));
+        canvas.setOnDragDetected((event) -> this.dragPosStart = new Vector3D(event.getX(), event.getY(), 0));
         canvas.setOnMouseDragged((event) -> {
             if (this.dragPosStart != null) {
-                model.Vector3D dragPosCurrent = new model.Vector3D(event.getX(), event.getY(), 0);
+                Vector3D dragPosCurrent = new Vector3D(event.getX(), event.getY(), 0);
                 dragPosCurrent.sub(this.dragPosStart);
-                dragPosStart = new model.Vector3D(event.getX(), event.getY(), 0);
+                dragPosStart = new Vector3D(event.getX(), event.getY(), 0);
                 transformer.setOriginXForOther(transformer.getOriginXForOther() + dragPosCurrent.x);
                 transformer.setOriginYForOther(transformer.getOriginYForOther() + dragPosCurrent.y);
             }
@@ -170,98 +203,34 @@ public class Gui extends Application {
         return canvas;
     }
 
+    /**
+     * @return HBox, containing all the data in the bottom of the screen
+     */
     private HBox createHBox() {
         HBox hbox = new HBox();
         hbox.setPadding(new Insets(15, 12, 15, 12));
-        hbox.setSpacing(10);   // Gap between nodes
-        hbox.setStyle("-fx-background-color: #d3d3d3;");
+        hbox.setSpacing(10);   // Gap between objects
+        hbox.setStyle("-fx-background-color: #336699;");
         hbox.setFillHeight(true);
-        hbox.getChildren().add(this.dateLabel);
-        hbox.getChildren().add(this.probeSpeedLabel);
-        hbox.getChildren().add(this.distanceLabel);
-        hbox.getChildren().add(this.fuelStatusLabel);
-        hbox.getChildren().add(this.missionStatusLabel);
+        hbox.getChildren().add(this.timeLabel);
+        hbox.getChildren().add(this.scaleLabel);
         return hbox;
     }
 
-    private void createDateLabel() {
-        dateLabel = new Label();
-        dateLabel.setPrefSize(100, 20);
-        dateLabel.setText("date: ");
+    /**
+     * creates the time label, to be added to the HBox.
+     */
+    private void createTimeLabel() {
+        timeLabel = new Label();
+        timeLabel.setPrefSize(500, 20);
     }
 
-    private void createSpeedLabel() {
-        probeSpeedLabel = new Label();
-        probeSpeedLabel.setPrefSize(100, 20);
-        probeSpeedLabel.setText("speed: ");
-    }
-
-    private void createDistanceLabel() {
-        distanceLabel = new Label();
-        distanceLabel.setPrefSize(100, 20);
-        distanceLabel.setText("distance: ");
-    }
-
-    private void createFuelLabel() {
-        fuelStatusLabel = new Label();
-        fuelStatusLabel.setPrefSize(100, 20);
-        fuelStatusLabel.setText("fuel: ");
-    }
-
-    private void createMissionStatusLabelLabel() {
-        missionStatusLabel = new Label();
-        missionStatusLabel.setPrefSize(100, 20);
-        missionStatusLabel.setText("status: ");
-    }
-
-    private void createLaunchDateLabel() {
-        launchDateLabel = new Label();
-        launchDateLabel.setPrefSize(100, 20);
-        launchDateLabel.setText("launch date: ");
-    }
-
-    private void createElapesedTimeLabel() {
-        elapsedTimeLabel = new Label();
-        elapsedTimeLabel.setPrefSize(100, 20);
-        elapsedTimeLabel.setText("elapsed time: ");
-    }
-
-    private void startLandingSim(Stage primaryStage){
-        //Label secondLabel = new Label("I'm a Label on new Window");
-
-        StackPane pane = new StackPane();
-
-        Scene secondScene = new Scene(pane, 600, 600);
-
-        // New window (Stage)
-        Stage landingStage = new Stage();
-        landingStage.setTitle("Second Stage");
-        landingStage.setScene(secondScene);
-
-        GraphicsContext gc2 = createLandingGUI(landingStage);
-        landingStage.show();
-        simStarted = true;
-    }
-
-    private GraphicsContext createLandingGUI(Stage stage){
-        BorderPane border = new BorderPane();
-
-        Canvas canvas = createCanvas();
-        border.setCenter(canvas);
-        stage.setTitle("sim");
-        Scene scene = new Scene(border);
-        stage.setScene(scene);
-        stage.setMaximized(true);
-
-        return canvas.getGraphicsContext2D();
-    }
-
-    private void landingSimUpdate(GraphicsContext gc){
-        gc.fillOval(100,100,200,200);
+    private void createScaleLabel() {
+        scaleLabel = new Label();
+        scaleLabel.setPrefSize(300, 20);
     }
 
     public static void main(String[] args) {
         launch(args);
     }
-
 }

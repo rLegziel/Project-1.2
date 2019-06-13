@@ -1,7 +1,7 @@
 package model;
 
 /**
- * Transforms coordinaates from the model to another coordinatesystem
+ * transforms the coordinates to another coordinate system
  */
 public class CoordinatesTransformer {
 
@@ -9,10 +9,16 @@ public class CoordinatesTransformer {
     private double originXForOther;
     private double originYForOther;
 
+    /**
+     * @return getter for the scale used.
+     */
     public double getScale() {
         return scale;
     }
 
+    /**
+     * @param scale a scale we want to set for the canvas
+     */
     public void setScale(double scale) {
         this.scale = scale;
     }

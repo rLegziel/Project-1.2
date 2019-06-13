@@ -29,6 +29,40 @@ public class PIDController {
     private double ki;
     private double kd;
 
+    public PIDController(double timeSlice, double setpointX, double setpointY) {
+        this.setpointX = setpointX;
+        this.setpointY = setpointY;
+        this.timeSlice = timeSlice;
+        previousErrorX = 0;
+        previousErrorY = 0;
+        integralX = 0;
+        integralY = 0;
+        kp = 0.1;
+        ki = 0;
+        kd = 0;
+        //this.time = time;
+    }
+
+    public double computeNewX(double currentX,double titanX) {
+        error = titanX - currentX;
+        integralX = integralX + error * timeSlice;
+        derivative = (error - previousErrorX) / timeSlice;
+        output = kp * error + ki * integralX + kd * derivative;
+        previousErrorX = error;
+        return output;
+    }
+
+    public double computeNewY(double currentY,double titanY) {
+        error = titanY - currentY;
+        integralY = integralY + error * timeSlice;
+        derivative = (error - previousErrorY) / timeSlice;
+        output = kp * error + ki * integralY + kd * derivative;
+        previousErrorY = error;
+        return output;
+    }
+
+    //lander PID
+
     public PIDController(double timeSlice,double kp,double ki,double kd) {
         this.timeSlice = timeSlice;
         previousErrorX = 0;
