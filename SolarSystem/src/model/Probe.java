@@ -7,6 +7,8 @@ public class Probe extends Body {
     public double startVX;
     public double startVY;
 
+    public Vector3D totalChangeInVelocity;
+
 
     public long getLaunchDate() {
         return launchDate;
@@ -72,6 +74,7 @@ public class Probe extends Body {
         if (location == null) {
             location = new Vector3D();
         }
+        totalChangeInVelocity = new Vector3D();
 
     }
 
@@ -82,6 +85,18 @@ public class Probe extends Body {
         this.name = name;
         this.startVX = startVX;
         this.startVY = startVY;
+        totalChangeInVelocity = new Vector3D();
+    }
+
+    public void calculateFuelConsumption(Vector3D thrusterForce, double timeSlice){
+        Vector3D acceleration = new Vector3D(thrusterForce).div(mass);
+        Vector3D velocityByAcc = new Vector3D(acceleration).mul(timeSlice);
+        velocityByAcc = velocityByAcc.absVector();
+        totalChangeInVelocity.add(velocityByAcc);
+    }
+
+    public Vector3D getFuelConsumption(){
+        return totalChangeInVelocity;
     }
 
 

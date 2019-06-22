@@ -41,9 +41,6 @@ public class BodySystem {
     private PIDController velocityy = new PIDController(1200,1,0,0);
     private PIDController velocityz = new PIDController(1200,1,0,0);
 
-    private PIDController orbitPIDx = new PIDController(1200,5,0.005,0);
-    private PIDController orbitPIDy = new PIDController(1200,5,0.005,0);
-    private PIDController orbitPIDz = new PIDController(1200,5,0,0);
 
     private ArrayList<Vector3D> PIDoutput = new ArrayList<>();
 
@@ -51,7 +48,7 @@ public class BodySystem {
     public Body chosenOne;
     public String currentTime;
 
-    public double minDistanceTitan = Integer.MAX_VALUE;
+    public double minDistanceTitan = Double.MAX_VALUE;
 
     //8.862395206670821E8
     //2.223667170921659E9
@@ -124,7 +121,7 @@ public class BodySystem {
         }
 
         elapsedSeconds += timeSlice;
-
+        
 
 
 
@@ -133,13 +130,10 @@ public class BodySystem {
             //if there is no output increase the distance when to check
             double distance = realProbesList.get(0).location.probeDistance(bodies.get(10).location);
             checkLocationtoTitan(bodies.get(10));
-
-            if (distance < 1000000000) {
-            }
         }
 
         //THIS IF STATEMENT DOESNT WORK ANYMORE
-        if (realProbesList.size()>=2 && elapsedSeconds>=timeClosestToTitan){
+        if (realProbesList.size()>=1 && elapsedSeconds>=timeClosestToTitan){
 
             double xVel = velocityx.compute(realProbesList.get(0).velocity.x,bodies.get(10).velocity.x);
             double yVel = velocityy.compute(realProbesList.get(0).velocity.y,bodies.get(10).velocity.y);
@@ -148,7 +142,8 @@ public class BodySystem {
             Vector3D velocityVector = new Vector3D(xVel,yVel,zVel);
 
             realProbesList.get(0).addAccelerationByForce(velocityVector);
-            System.out.println("check");
+
+            realProbesList.get(0).calculateFuelConsumption(velocityVector, timeSlice);
 
         }
 
@@ -322,9 +317,13 @@ public class BodySystem {
         }
     }
 
+
+
     public List getBodieslist(){
         return bodies;
     }
+
+    public ArrayList<Probe> getProbeList() { return realProbesList;}
 
 }
 

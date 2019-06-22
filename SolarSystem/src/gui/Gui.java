@@ -1,5 +1,6 @@
 package gui;
 import javafx.animation.KeyFrame;
+import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
@@ -19,6 +20,8 @@ import javafx.util.Duration;
 import model.*;
 
 import java.awt.*;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 /**
@@ -27,23 +30,33 @@ import java.awt.*;
  * Note that javafx uses a coordinate system with origin top left.
  */
 public class Gui extends Application {
-    /** Number of seconds to update the model with for each iteration (delta T) */
+    /**
+     * Number of seconds to update the model with for each iteration (delta T)
+     */
     public static final double TIME_SLICE = 60 * 20; // used to be 60*30
 
-    /** initial scale pixel/meter */
-    public static final double INITIAL_SCALE = 13e8 ; // was 5e9
+    /**
+     * initial scale pixel/meter
+     */
+    public static final double INITIAL_SCALE = 13e8; // was 5e9
 
-    /** radius in pixels of body in gui */
+    /**
+     * radius in pixels of body in gui
+     */
     public static final double BODY_RADIUS_GUI = 2;
 
     private double spaceshipSize = 4.5;
 
     private static final int BOTTOM_AREA_HEIGHT = 100;
 
-    /** bodies in system rendered by gui */
+    /**
+     * bodies in system rendered by gui
+     */
     private BodySystem bodySystem;
 
-    /** transforms between coordinates in model and coordinates in gui */
+    /**
+     * transforms between coordinates in model and coordinates in gui
+     */
     private CoordinatesTransformer transformer = new CoordinatesTransformer();
 
     private javafx.scene.image.Image spaceshipImg = new Image("res/spaceship.png");
@@ -65,14 +78,17 @@ public class Gui extends Application {
     private long elapsedTime;
     private long firstLaunch;
 
-    public Gui(int destination, long elapsedTime, long firstLaunch){
+    private PauseTransition delay;
+
+    public Gui(int destination, long elapsedTime, long firstLaunch) {
         this.destination = destination;
         this.elapsedTime = elapsedTime;
         this.firstLaunch = firstLaunch;
         System.out.println(destination);
     }
 
-    public Gui(){}
+    public Gui() {
+    }
 
 
     @Override
@@ -101,20 +117,36 @@ public class Gui extends Application {
      * Draw a frame
      *
      * @param gc, a graphicsContext object.
-     *
      */
     protected void updateFrame(GraphicsContext gc) {
         //System.out.println(bodySystem.minDistanceTitan);
-        if(bodySystem.minDistanceTitan < 1.0E9 && destination == 0){
-            System.out.println(bodySystem.getElapsedTime());
-            //timeline.stop();
-            //stage.close();
-            try {
-                //new LandingGui(0).start(new Stage());
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.out.println("not working");
+        double distanceToClose = 1.79E10;
+        if (bodySystem.minDistanceTitan < distanceToClose && destination == 0) {
+            //System.out.println(bodySystem.getElapsedTime());
+
+            //delays when to switch from the different gui's
+            //this is done to see that the probe is actually in orbit
+            if (delay == null) {
+                //System.out.println("succeeded");
+                //you can set the delay here
+                delay = new PauseTransition(Duration.seconds(8));
+                delay.setOnFinished(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent event) {
+                        timeline.stop();
+                        stage.close();
+                        System.out.println("The change in velocity due to the engines: " + bodySystem.getProbeList().get(0).getFuelConsumption().toString());
+                        try {
+                            new LandingGui(0).start(new Stage());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            System.out.println("not working");
+                        }
+                    }
+                });
+                delay.play();
             }
+
         }
         this.canvasWidth = gc.getCanvas().getWidth();
         this.canvasHeight = gc.getCanvas().getHeight();
@@ -122,14 +154,14 @@ public class Gui extends Application {
 
         TimeConverter tc = new TimeConverter();
 
-        gc.fillText("currentTime:"+tc.currentDate(bodySystem.getElapsedTime()),canvasWidth-300,200);
-        gc.fillText("elapsedTime: "+bodySystem.getElapsedTime(),canvasWidth-300,250);
-        gc.fillText("elapsedTimeString"+bodySystem.getElapsedTimeAsString(), canvasWidth-300,300);
-        gc.fillText("timeToLaunch: "+bodySystem.getTimeToLaunch(),canvasWidth-300,350);
-        gc.fillText("distance: "+bodySystem.minDistanceTitan,canvasWidth-300,400);
+        gc.fillText("currentTime:" + tc.currentDate(bodySystem.getElapsedTime()), canvasWidth - 300, 200);
+        gc.fillText("elapsedTime: " + bodySystem.getElapsedTime(), canvasWidth - 300, 250);
+        gc.fillText("elapsedTimeString" + bodySystem.getElapsedTimeAsString(), canvasWidth - 300, 300);
+        gc.fillText("timeToLaunch: " + bodySystem.getTimeToLaunch(), canvasWidth - 300, 350);
+        gc.fillText("distance: " + bodySystem.minDistanceTitan, canvasWidth - 300, 400);
 
 
-        for (int i = 0; i<bodySystem.getBodies().size();i++) {
+        for (int i = 0; i < bodySystem.getBodies().size(); i++) {
 
 
             double otherX = transformer.modelToOtherX(bodySystem.getBodies().get(i).location.x);
@@ -138,9 +170,9 @@ public class Gui extends Application {
             double scale = bodySystem.getBodies().get(i).scale * 5;
             // draw circle
             gc.setFill(bodySystem.getBodies().get(i).color);
-            if(i == 12){
+            if (i == 12) {
                 gc.setFill(Color.TRANSPARENT);
-                gc.drawImage(spaceshipImg,otherX - BODY_RADIUS_GUI, otherY - BODY_RADIUS_GUI, spaceshipSize * 2 + scale, spaceshipSize * 2 + scale);
+                gc.drawImage(spaceshipImg, otherX - BODY_RADIUS_GUI, otherY - BODY_RADIUS_GUI, spaceshipSize * 2 + scale, spaceshipSize * 2 + scale);
             }
             gc.fillOval(otherX - BODY_RADIUS_GUI, otherY - BODY_RADIUS_GUI, BODY_RADIUS_GUI * 2 + scale, BODY_RADIUS_GUI * 2 + scale);
 
@@ -149,7 +181,6 @@ public class Gui extends Application {
             Text text = new Text(bodySystem.getBodies().get(i).name);
             gc.fillText(bodySystem.getBodies().get(i).name, otherX - (text.getLayoutBounds().getWidth() / 2), otherY - BODY_RADIUS_GUI - (text.getLayoutBounds().getHeight() / 2));
         }
-
 
 
         bodySystem.update(TIME_SLICE, timeline);
@@ -165,11 +196,11 @@ public class Gui extends Application {
     }
 
     protected void createBodies() {
-        if(destination == 1){
+        if (destination == 1) {
             this.bodySystem = new SolarSystem(destination);
             bodySystem.setFirstLaunch(firstLaunch + elapsedTime);
             bodySystem.setElapsedSeconds(elapsedTime);
-        }else{
+        } else {
             this.bodySystem = new SolarSystem(destination);
         }
     }
@@ -184,7 +215,7 @@ public class Gui extends Application {
 //        createFPSLabel();
         createScaleLabel();
         //HBox hbox = createHBox();
-       // border.setBottom(hbox);
+        // border.setBottom(hbox);
         Canvas canvas = createCanvas();
         border.setCenter(canvas);
         stage.setTitle("NBody simulation");

@@ -79,6 +79,18 @@ public class Vector3D {
     }
 
     /**
+     * creates the absolute value vector
+     * @return
+     */
+    public Vector3D absVector(){
+        Vector3D absVector = new Vector3D(this);
+        absVector.x = Math.abs(absVector.x);
+        absVector.y = Math.abs(absVector.y);
+        absVector.z = Math.abs(absVector.z);
+        return absVector;
+    }
+
+    /**
      * @return normalize the vector, multiplying by 1/its length.
      */
     public Vector3D normalize() {
