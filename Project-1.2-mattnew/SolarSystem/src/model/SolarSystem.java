@@ -7,10 +7,10 @@ import static model.CelestialBody.*;
 public class SolarSystem extends BodySystem {
 
     // the list of celestial bodies in our system, use names from enum!
-    private static CelestialBody[] CELESTIAL_BODIES_IN_SYSTEM = new CelestialBody[] {SUN, MERCURY, VENUS, EARTH, MARS, JUPITER, SATURN, NEPTUNE, URANUS, PLUTO,TITAN,MOON};
+    private static CelestialBody[] CELESTIAL_BODIES_IN_SYSTEM = new CelestialBody[] {SUN, MERCURY, VENUS, EARTH, MARS, JUPITER, SATURN, NEPTUNE, URANUS, PLUTO,TITAN};
     private static CelestialBodyReturn[] CELESTIAL_BODIES_IN_SYSTEM_2 = new CelestialBodyReturn[]{CelestialBodyReturn.SUN, CelestialBodyReturn.MERCURY,
             CelestialBodyReturn.VENUS, CelestialBodyReturn.EARTH, CelestialBodyReturn.MARS, CelestialBodyReturn.JUPITER, CelestialBodyReturn.SATURN,
-            CelestialBodyReturn.NEPTUNE, CelestialBodyReturn.URANUS, CelestialBodyReturn.PLUTO,CelestialBodyReturn.TITAN};
+            CelestialBodyReturn.NEPTUNE, CelestialBodyReturn.URANUS, CelestialBodyReturn.PLUTO,CelestialBodyReturn.TITAN,CelestialBodyReturn.MOON};
 
 
 

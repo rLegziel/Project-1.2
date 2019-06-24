@@ -19,6 +19,8 @@ public class BodySystem {
     private static final int SEC_IN_YEAR = 31556926;
     private long elapsedSeconds = 0;
 
+    private boolean reachedEarth = false;
+
     //the time when I start to adjust the trajectory with the engines
     private long saturnTime = 238608000;
     private long closestToSaturn = 238996800;
@@ -37,9 +39,13 @@ public class BodySystem {
 
 
 
-    private PIDController velocityx = new PIDController(1200,1,0,0);
-    private PIDController velocityy = new PIDController(1200,1,0,0);
-    private PIDController velocityz = new PIDController(1200,1,0,0);
+    private PIDController orbitTitanx = new PIDController(1200,1,0,0);
+    private PIDController orbitTitany = new PIDController(1200,1,0,0);
+    private PIDController orbitTitanz = new PIDController(1200,1,0,0);
+
+    private PIDController orbitEarthx = new PIDController(1200,8.2,0.0002,0);
+    private PIDController orbitEarthy = new PIDController(1200,8.2,0.0002,0);
+    private PIDController orbitEarthz = new PIDController(1200,8.2,0.0002,0);
 
 
     private ArrayList<Vector3D> PIDoutput = new ArrayList<>();
@@ -135,12 +141,12 @@ public class BodySystem {
 
         }
 
-        //THIS IF STATEMENT DOESNT WORK ANYMORE
+        //makes sure probe stays in orbit Titan
         if (realProbesList.size()>=1 && elapsedSeconds>=timeClosestToTitan && destination == 0){
 
-            double xVel = velocityx.compute(realProbesList.get(0).velocity.x,bodies.get(10).velocity.x);
-            double yVel = velocityy.compute(realProbesList.get(0).velocity.y,bodies.get(10).velocity.y);
-            double zVel = velocityz.compute(realProbesList.get(0).velocity.z,bodies.get(10).velocity.z);
+            double xVel = orbitTitanx.compute(realProbesList.get(0).velocity.x,bodies.get(10).velocity.x);
+            double yVel = orbitTitany.compute(realProbesList.get(0).velocity.y,bodies.get(10).velocity.y);
+            double zVel = orbitTitanz.compute(realProbesList.get(0).velocity.z,bodies.get(10).velocity.z);
 
             Vector3D velocityVector = new Vector3D(xVel,yVel,zVel);
 
@@ -149,6 +155,24 @@ public class BodySystem {
             realProbesList.get(0).calculateFuelConsumption(velocityVector, timeSlice);
 
         }
+
+
+        if ((realProbesList.size()>=1 && checkLocationtoTitan(bodies.get(3))<=8.0E+9 && destination == 1)||reachedEarth==true){
+
+            reachedEarth = true;
+            double xVel = orbitEarthx.compute(realProbesList.get(0).velocity.x,bodies.get(11).velocity.x);
+            double yVel = orbitEarthy.compute(realProbesList.get(0).velocity.y,bodies.get(11).velocity.y);
+            double zVel = orbitEarthz.compute(realProbesList.get(0).velocity.z,bodies.get(11).velocity.z);
+            //System.out.println("check");
+
+            Vector3D velocityVector = new Vector3D(xVel,yVel,zVel);
+
+            realProbesList.get(0).addAccelerationByForce(velocityVector);
+
+            realProbesList.get(0).calculateFuelConsumption(velocityVector, timeSlice);
+
+        }
+
 
 
 
@@ -233,7 +257,7 @@ public class BodySystem {
 
 
     /**
-     * checks the distance between each probe and titan, will print the probe that gets closest to titan.
+     * checks the distance between each probe and titan or another celestial body, will print the probe that gets closest to titan.
      */
     public double checkLocationtoTitan(Body other){
         startingDistance = 5E15;

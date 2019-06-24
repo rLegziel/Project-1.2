@@ -33,6 +33,7 @@ public class Body {
     }
 
     public Body(Vector3D location, Vector3D velocity, double radius, double mass) {
+        name = "noName";
         this.location = location;
         this.velocity = velocity;
         this.radius = radius;
@@ -41,6 +42,7 @@ public class Body {
     }
 
     public Body(){
+        name = "noName";
 
     }
 
@@ -172,6 +174,13 @@ public class Body {
     public void addAccelerationByGravityForce(Body other) {
         addAccelerationByForce(calculateGravitationalForce(other));
     }
+
+    @Override
+    public String toString() {
+        //String string = ("name = " + name + "x = " + location.x + "y = " + location.y + "z = " location.z + "vx = " + velocity.x + "vy = " + velocity.y + "vz = = " + velocity.z);
+        return String.format("name = %f, x = %f, y = %f, z = %f, vx = %f, vy = %f, vz = %f", name, location.x, location.y, location.z,velocity.x,velocity.y,velocity.z);
+    }
+
 
 
 }

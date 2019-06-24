@@ -135,6 +135,10 @@ public class Gui extends Application {
                     public void handle(ActionEvent event) {
                         timeline.stop();
                         stage.close();
+                        System.out.println(elapsedTime);
+                        for (int i = 0; i<bodySystem.getBodies().size();i++){
+                            //System.out.println(bodySystem.getBodies().get(i).toString());
+                        }
                         System.out.println("The change in velocity due to the engines: " + bodySystem.getProbeList().get(0).getFuelConsumption().toString());
                         try {
                             new LandingGui(0).start(new Stage());
@@ -170,7 +174,7 @@ public class Gui extends Application {
             double scale = bodySystem.getBodies().get(i).scale * 5;
             // draw circle
             gc.setFill(bodySystem.getBodies().get(i).color);
-            if (i == bodySystem.getBodies().size()-1) {
+            if (i == bodySystem.getBodies().size()-1&&bodySystem.getProbeList().size()>=1) {
                 gc.setFill(Color.TRANSPARENT);
                 gc.drawImage(spaceshipImg, otherX - BODY_RADIUS_GUI, otherY - BODY_RADIUS_GUI, spaceshipSize * 2 + scale, spaceshipSize * 2 + scale);
             }
