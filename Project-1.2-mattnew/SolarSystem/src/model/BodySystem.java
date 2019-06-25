@@ -17,6 +17,7 @@ public class BodySystem {
     private static final int SEC_IN_HOUR = SEC_IN_MINUTE * 60;
     private static final int SEC_IN_DAY = SEC_IN_HOUR * 24;
     private static final int SEC_IN_YEAR = 31556926;
+    private static final int SEC_in_360_DAYS = 31104000;
     private long elapsedSeconds = 0;
 
     private boolean reachedEarth = false;
@@ -141,7 +142,7 @@ public class BodySystem {
 
         }
 
-        //makes sure probe stays in orbit Titan
+        //makes sure probe stays in orbit Saturn
         if (realProbesList.size()>=1 && elapsedSeconds>=timeClosestToTitan && destination == 0){
 
             double xVel = orbitTitanx.compute(realProbesList.get(0).velocity.x,bodies.get(10).velocity.x);
@@ -157,13 +158,14 @@ public class BodySystem {
         }
 
 
+        //make sure probe stays in orbit Earth
         if ((realProbesList.size()>=1 && checkLocationtoTitan(bodies.get(3))<=8.0E+9 && destination == 1)||reachedEarth==true){
 
             reachedEarth = true;
             double xVel = orbitEarthx.compute(realProbesList.get(0).velocity.x,bodies.get(11).velocity.x);
             double yVel = orbitEarthy.compute(realProbesList.get(0).velocity.y,bodies.get(11).velocity.y);
             double zVel = orbitEarthz.compute(realProbesList.get(0).velocity.z,bodies.get(11).velocity.z);
-            //System.out.println("check");
+
 
             Vector3D velocityVector = new Vector3D(xVel,yVel,zVel);
 
@@ -173,6 +175,9 @@ public class BodySystem {
 
         }
 
+        if (elapsedSeconds ==(SEC_in_360_DAYS*5)){
+            printBodyLocations();
+        }
 
 
 
@@ -272,7 +277,9 @@ public class BodySystem {
             currentTime = getElapsedTimeAsString();
             //System.out.println(currentTime);
             //System.out.println(elapsedSeconds);
-            minDistanceToTarget = startingDistance;
+            if (bodies.get(10).name.equals(other.name)){
+                minDistanceToTarget = startingDistance;
+            }
             return startingDistance;
         }
         return startingDistance;
@@ -358,6 +365,19 @@ public class BodySystem {
     }
 
     public ArrayList<Probe> getProbeList() { return realProbesList;}
+
+    public long getTimeClosestToTitan(){
+        return timeClosestToTitan;
+    }
+
+    //prints the location of the probes to compare with NASA
+    public void printBodyLocations(){
+        System.out.println(getElapsedTimeAsString());
+        for (int i = 0; i<bodies.size();i++){
+            System.out.println(bodies.get(i).toString());
+        }
+
+    }
 
 }
 

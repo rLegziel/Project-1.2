@@ -22,6 +22,8 @@ public class Lander extends Body {
     private Vector3D realSpaceshipLocation;
     private final double realLandingLocationx;
 
+    private Vector3D totalChangeInVelocity;
+
     private boolean isLanding;
 
     private double windSpeed;
@@ -82,6 +84,8 @@ public class Lander extends Body {
         realSpaceshipLocation = new Vector3D(location);
         realLandingLocation = location.add(scaledLandingLocation);
         realLandingLocationx = location.x + scaledLandingLocation.x;
+
+        totalChangeInVelocity = new Vector3D();
 
 
         isLanding = true;
@@ -223,6 +227,11 @@ public class Lander extends Body {
         dispLocY -= (delta.y) / scalingFactor;
 //        System.out.println(velocity.x + " is my xVelocity right now, end of method reset.");
 
+        Vector3D fuelConsumption = new Vector3D(thrusterForce);
+        fuelConsumption.x = fuelConsumption.x*Math.sin(angle);
+        fuelConsumption.y = fuelConsumption.y*Math.cos(angle);
+        calculateFuelConsumption(fuelConsumption,timeSlice);
+
 
     }
 
@@ -344,9 +353,21 @@ public class Lander extends Body {
 
     public void markAsLanded() {
         isLanding = false;
+        System.out.println("change in velocity for landing: " + totalChangeInVelocity.toString());
+        totalChangeInVelocity = new Vector3D();
     }
 
     public boolean getIsLanding(){
         return isLanding;
+    }
+    public void calculateFuelConsumption(Vector3D thrusterForce, double timeSlice){
+        Vector3D acceleration = new Vector3D(thrusterForce).div(mass);
+        Vector3D velocityByAcc = new Vector3D(acceleration).mul(timeSlice);
+        velocityByAcc = velocityByAcc.absVector();
+        totalChangeInVelocity.add(velocityByAcc);
+    }
+
+    public Vector3D getTotalChangeInVelocity(){
+        return totalChangeInVelocity;
     }
 }

@@ -177,8 +177,9 @@ public class Body {
 
     @Override
     public String toString() {
-        //String string = ("name = " + name + "x = " + location.x + "y = " + location.y + "z = " location.z + "vx = " + velocity.x + "vy = " + velocity.y + "vz = = " + velocity.z);
-        return String.format("name = %f, x = %f, y = %f, z = %f, vx = %f, vy = %f, vz = %f", name, location.x, location.y, location.z,velocity.x,velocity.y,velocity.z);
+        String string = ("name = " + name + ", x = " + location.x + ", y = " + location.y + ", z = " + location.z);
+        //return String.format("name = %f, x = %f, y = %f, z = %f, vx = %f, vy = %f, vz = %f", name, location.x, location.y, location.z,velocity.x,velocity.y,velocity.z);
+        return string;
     }
 
 

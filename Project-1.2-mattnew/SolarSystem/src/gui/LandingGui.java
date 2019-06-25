@@ -207,6 +207,7 @@ public class LandingGui extends Application {
                       System.out.println(elapsedTime);
                       stage.close();
                       timeline.stop();
+                      System.out.println("change in velocity for getting back to ship: " + lander.getTotalChangeInVelocity().toString());
                       try {
                           new Gui(1,elapsedTime,intitialLaunch).start(new Stage());
                       } catch (Exception e) {

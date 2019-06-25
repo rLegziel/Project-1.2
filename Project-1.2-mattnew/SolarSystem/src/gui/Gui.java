@@ -120,22 +120,21 @@ public class Gui extends Application {
      */
     protected void updateFrame(GraphicsContext gc) {
         //System.out.println(bodySystem.minDistanceTitan);
-        double distanceToClose = 1.79E10;
+        double distanceToClose = 1.79E9;
         if (bodySystem.minDistanceToTarget < distanceToClose && destination == 0) {
-            //System.out.println(bodySystem.getElapsedTime());
-
             //delays when to switch from the different gui's
             //this is done to see that the probe is actually in orbit
             if (delay == null) {
+                System.out.println(bodySystem.getElapsedTimeAsString());
                 //System.out.println("succeeded");
                 //you can set the delay here
-                delay = new PauseTransition(Duration.seconds(3));
+                delay = new PauseTransition(Duration.seconds(10));
                 delay.setOnFinished(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent event) {
                         timeline.stop();
                         stage.close();
-                        System.out.println(elapsedTime);
+                        System.out.println(bodySystem.getElapsedTimeAsString());
                         for (int i = 0; i<bodySystem.getBodies().size();i++){
                             //System.out.println(bodySystem.getBodies().get(i).toString());
                         }
