@@ -46,7 +46,6 @@ public class Probe extends Body {
     public void calculateFuelConsumption(Vector3D thrusterForce, double timeSlice){
         Vector3D acceleration = new Vector3D(thrusterForce).div(mass);
         Vector3D velocityByAcc = new Vector3D(acceleration).mul(timeSlice);
-        velocityByAcc = velocityByAcc.absVector();
         totalChangeInVelocity.add(velocityByAcc);
     }
 

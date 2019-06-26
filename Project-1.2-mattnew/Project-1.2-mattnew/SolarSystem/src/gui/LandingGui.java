@@ -176,6 +176,7 @@ public class LandingGui extends Application {
                   if(titanLander.getTitanDistance() > 28 * titanLander.getScalingFactor() && openLoopTitanLander.getTitanDistance() > 28 * titanLander.getScalingFactor()){
                       titanLander.calculateAccelerationLanding(titanLander.thrusterForceLanding());
                   }else{
+                      System.out.println("xSpeed " +titanLander.velocity.x + " yspeed " +titanLander.velocity.y + " angle " + titanLander.getAngle());
                       gc.fillText("Landed successfully!", canvasWidth / 2 - 50, canvasHeight / 2);
                       gc.clearRect(canvasWidth / 2 - 50,canvasHeight/2-50,150,100);
                       missionStage = 1;
@@ -206,21 +207,21 @@ public class LandingGui extends Application {
 
           //uncomment this if you want to switch for different PID
           //works better but is MUCH slower
-//              if (titanLander.getTitanDistance() < 17500 && changed1 == false) {
-//                  titanLander.changeYPID(1, 7, 0.0001, 10); // seems like the optimal, will lead to landing at y speed of about 0.27 m/s which is about 1 km/h.
-//                  changed1 = true;
-//                  // the ki is 0.0000001 , kp is 7
-//              }
-//              if (titanLander.getTitanDistance() < 40000 && changed2 == false) {
-//                  titanLander.changeYPID(1, 1, 0.0000000001, 10);
-////                titanLander.changeXLPID(1,0.0001,0,0.1); // optimal
-//                  changed2 = true;
-//
-//              }
-//              if (titanLander.getTitanDistance() < 30000 && changed3 == false) {
-//                  titanLander.changeYPID(1, 2, 0.0000000001, 10);
-//                  changed3 = true;
-//              }
+              if (titanLander.getTitanDistance() < 17500 && changed1 == false) {
+                  titanLander.changeYPID(1, 7, 0.0001, 10); // seems like the optimal, will lead to landing at y speed of about 0.27 m/s which is about 1 km/h.
+                  changed1 = true;
+                  // the ki is 0.0000001 , kp is 7
+              }
+              if (titanLander.getTitanDistance() < 40000 && changed2 == false) {
+                  titanLander.changeYPID(1, 1, 0.0000000001, 10);
+//                titanLander.changeXLPID(1,0.0001,0,0.1); // optimal
+                  changed2 = true;
+
+              }
+              if (titanLander.getTitanDistance() < 30000 && changed3 == false) {
+                  titanLander.changeYPID(1, 2, 0.0000000001, 10);
+                  changed3 = true;
+              }
 
       } else if(chosenLander.equals(earthLander)){
           if(earthLander.getDispLocY() < canvasHeight-50){

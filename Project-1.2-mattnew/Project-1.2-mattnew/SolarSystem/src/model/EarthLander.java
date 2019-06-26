@@ -186,7 +186,7 @@ public class EarthLander extends Body implements Lander {
         Vector3D fuelConsumption = new Vector3D(thrusterForce);
         fuelConsumption.x = fuelConsumption.x*Math.sin(angle);
         fuelConsumption.y = fuelConsumption.y*Math.cos(angle);
-        //calculateFuelConsumption(fuelConsumption,timeSlice);
+        calculateFuelConsumption(fuelConsumption,timeSlice);
     }
 
     @Override
@@ -224,6 +224,16 @@ public class EarthLander extends Body implements Lander {
         Vector3D PID = accelerationVector.add(reduceVelocityVector);
         PID.add(new Vector3D(xAccPosition,0,0));
         return PID;
+    }
+
+    public void calculateFuelConsumption(Vector3D thrusterForce, double timeSlice){
+        Vector3D acceleration = new Vector3D(thrusterForce).div(mass);
+        Vector3D velocityByAcc = new Vector3D(acceleration).mul(timeSlice);
+        totalChangeInVelocity.add(velocityByAcc);
+    }
+
+    public Vector3D getTotalChangeInVelocity(){
+        return totalChangeInVelocity;
     }
 
     @Override
