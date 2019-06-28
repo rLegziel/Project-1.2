@@ -1,6 +1,6 @@
 # Project-1.2 Titan 
 
-##Project structure
+## Project structure
 
 #### Diveded in classes that:
 
