@@ -4,20 +4,20 @@
 
 #### Diveded in classes that:
 
-#####a) Contain code for the GUI's
+##### a) Contain code for the GUI's
 * Gui.java
 * InitialGui.java
 * LandingGui.java
 * ResizableCanvas
 
-####b) Contain code for running the mission
+#### b) Contain code for running the mission
 * BodySystem.java
 * SolarSystem.java
 * EarthLander.java
 * TitanLander.java
 * PIDController.java
 
-#####c) Store object data of facilitate calculations
+##### c) Store object data of facilitate calculations
 * The rest of the classes
 
 
