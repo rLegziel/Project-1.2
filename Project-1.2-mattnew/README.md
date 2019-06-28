@@ -23,7 +23,7 @@
 
 ##Mission Structure 
 
-####Trajectory 
+#### Trajectory 
 
 Probe is launched from Earth in direction Titan, 
 with our goal being to make trajectory as straight as possible, 
@@ -44,7 +44,7 @@ probe enters the orbit
 * SolarSystem.java - arranges planets (BodySystem child)
 * Body.java - applies Forces
 
-####Landing 
+#### Landing 
 
 For landing on Titan we assumes orbit height and apply the forces of gravity 
 on the lander probe. Also the wind speeds depending on altitude are applied.
